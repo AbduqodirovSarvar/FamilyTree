@@ -1,7 +1,9 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Mappings;
+using Application.Common.Models;
 using Application.Services;
 using AutoMapper;
+using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -21,9 +23,13 @@ namespace Application.Extentions
                 cfg.RegisterServicesFromAssembly(typeof(DepencyInjection).Assembly);
             });
 
-            services.AddScoped<ICurrentFamily, CurrentFamily>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-            //services.AddAutoMapper(typeof(FamilyMappingProfile));
+            services.AddAutoMapper(x =>
+            {
+                x.CreateMap<User, UserViewModel>().ReverseMap();
+                x.CreateMap<Family, FamilyViewModel>().ReverseMap();
+            });
         }
     }
 }

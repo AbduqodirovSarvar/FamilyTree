@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Application.Common.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -9,6 +10,6 @@ namespace Application.Common.Interfaces
 {
     public interface ITokenService
     {
-        string GetToken(Claim[] claims);
+        TokenViewModel GetToken(Claim[] claims);
     }
 }

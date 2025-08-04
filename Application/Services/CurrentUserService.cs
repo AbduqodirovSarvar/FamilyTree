@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public class CurrentFamily : ICurrentFamily
+    public class CurrentUserService : ICurrentUserService
     {
         public Guid Id { get; set; }
 
-        public CurrentFamily(IHttpContextAccessor _contextAccessor)
+        public CurrentUserService(IHttpContextAccessor _contextAccessor)
         {
             var httpContext = _contextAccessor.HttpContext;
             var userClaims = httpContext?.User.Claims;

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces
 {
-    public interface ICurrentFamily
+    public interface ICurrentUserService
     {
-        public Guid Id { get; set; }
+        Guid Id { get; set; }
     }
 }
