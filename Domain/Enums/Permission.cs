@@ -22,13 +22,26 @@ namespace Domain.Enums
 
         // User Operations
         GET_USER = 9,
-        UPDATE_USER = 10,
-        DELETE_USER = 11,
+        CREATE_USER = 10,
+        UPDATE_USER = 11,
+        DELETE_USER = 12,
 
         // Role Operations
-        GET_ROLE = 12,
-        CREATE_ROLE = 13,
-        UPDATE_ROLE = 14,
-        DELETE_ROLE = 15
+        GET_ROLE = 13,
+        CREATE_ROLE = 14,
+        UPDATE_ROLE = 15,
+        DELETE_ROLE = 16,
+
+        // File Operations
+        GET_FILE = 17,
+        CREATE_FILE = 18,
+        UPDATE_FILE = 19,
+        DELETE_FILE = 20,
+
+        // Role Permission Operations
+        GET_ROLE_PERMISSION = 21,
+        CREATE_ROLE_PERMISSION = 22,
+        UPDATE_ROLE_PERMISSION = 23,
+        DELETE_ROLE_PERMISSION = 24,
     }
 }

@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.Repositories
 {
-    public interface IUploadedFileRepository : IGenericRepository<UploadedFile>
+    public interface IUploadedFileRepository 
+        : IGenericRepository<UploadedFile>
     {
     }
 }

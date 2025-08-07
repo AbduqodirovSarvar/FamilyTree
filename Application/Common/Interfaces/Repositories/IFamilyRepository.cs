@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.Repositories
 {
-    public interface IFamilyRepository : IGenericRepository<Family>
+    public interface IFamilyRepository 
+        : IGenericRepository<Family>
     {
     }
 }

@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.Repositories
 {
-    public interface IUserRoleRepository : IGenericRepository<UserRole>
+    public interface IUserRoleRepository 
+        : IGenericRepository<UserRole>
     {
     }
 }

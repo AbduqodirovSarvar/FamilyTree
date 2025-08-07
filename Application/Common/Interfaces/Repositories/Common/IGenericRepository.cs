@@ -9,16 +9,17 @@ namespace Application.Common.Interfaces.Repositories.Common
 {
     public interface IGenericRepository<TEntity>
     {
-        Task<TEntity> CreateAsync(TEntity entity);
-        Task<TEntity> UpdateAsync(TEntity entity);
-        Task<bool> DeleteAsync(TEntity entity);
-        Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate);
-        Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null);
+        Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
+        Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+        Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
+        Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+        Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
         Task<(List<TEntity> Data, int TotalItems)> GetPaginatedAsync(
             Expression<Func<TEntity, bool>>? predicate = null,
             int pageIndex = 0,
             int pageSize = 10,
-            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null);
-        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>>? predicate = null);
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+            CancellationToken cancellationToken = default);
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
     }
 }

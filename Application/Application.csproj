@@ -8,17 +8,8 @@
 
   <ItemGroup>
     <Compile Remove="Common\Exceptions\**" />
-    <Compile Remove="UseCases\Family\**" />
-    <Compile Remove="UseCases\UploadedFile\**" />
-    <Compile Remove="UseCases\User\**" />
     <EmbeddedResource Remove="Common\Exceptions\**" />
-    <EmbeddedResource Remove="UseCases\Family\**" />
-    <EmbeddedResource Remove="UseCases\UploadedFile\**" />
-    <EmbeddedResource Remove="UseCases\User\**" />
     <None Remove="Common\Exceptions\**" />
-    <None Remove="UseCases\Family\**" />
-    <None Remove="UseCases\UploadedFile\**" />
-    <None Remove="UseCases\User\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,10 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
