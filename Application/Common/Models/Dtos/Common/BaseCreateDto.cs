@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Features.User.Queries.Get.GetList
+namespace Application.Common.Models.Dtos.Common
 {
-    internal class GetUserListQuery
+    public abstract record BaseCreateDto
     {
     }
 }

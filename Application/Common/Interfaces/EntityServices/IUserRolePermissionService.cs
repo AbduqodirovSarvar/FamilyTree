@@ -1,4 +1,6 @@
 ﻿using Application.Common.Interfaces.EntityServices.Common;
+using Application.Common.Models;
+using Application.Common.Models.Dtos.UserRolePermission;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 namespace Application.Common.Interfaces.EntityServices
 {
     internal interface IUserRolePermissionService
-        : IGenericEntityService<UserRolePermission>
+        : IGenericEntityService<UserRolePermission, CreateUserRolePermissionDto, UpdateUserRolePermissionDto, UserRolePermissionViewModel>
     {
     }
 }

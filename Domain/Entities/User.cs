@@ -19,7 +19,7 @@ namespace Domain.Entities
         public string? Phone { get; set; }
         [EmailAddress]
         public string Email { get; set; } = "youremail@gmail.com";
-        public string Password { get; set; } = null!;
+        public string PasswordHash { get; set; } = null!;
 
         public Guid FamilyId { get; set; }
         public Family? Family { get; set; }

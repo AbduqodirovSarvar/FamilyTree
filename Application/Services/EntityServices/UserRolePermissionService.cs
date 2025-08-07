@@ -1,7 +1,10 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
+using Application.Common.Models;
+using Application.Common.Models.Dtos.UserRolePermission;
 using Application.Services.EntityServices.Common;
+using AutoMapper;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -13,8 +16,9 @@ namespace Application.Services.EntityServices
 {
     internal class UserRolePermissionService(
         IUserRolePermissionRepository userRolePermissionRepository,
-        IPermissionService permissionService) 
-        : GenericEntityService<UserRolePermission>(userRolePermissionRepository, permissionService), IUserRolePermissionService
+        IPermissionService permissionService,
+        IMapper mapper) 
+        : GenericEntityService<UserRolePermission, CreateUserRolePermissionDto, UpdateUserRolePermissionDto, UserRolePermissionViewModel>(userRolePermissionRepository, permissionService, mapper), IUserRolePermissionService
     {
     }
 }

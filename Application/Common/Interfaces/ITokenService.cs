@@ -10,6 +10,6 @@ namespace Application.Common.Interfaces
 {
     public interface ITokenService
     {
-        TokenViewModel GenerateToken(Claim[] claims);   
+        TokenViewModel GenerateToken(Claim[] claims);
     }
 }

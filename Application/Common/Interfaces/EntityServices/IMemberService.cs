@@ -1,4 +1,6 @@
 ﻿using Application.Common.Interfaces.EntityServices.Common;
+using Application.Common.Models;
+using Application.Common.Models.Dtos.Member;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,8 +10,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.EntityServices
 {
-    internal interface IMemberService 
-        : IGenericEntityService<Member>
+    public interface IMemberService 
+        : IGenericEntityService<Member, CreateMemberDto, UpdateMemberDto, MemberViewModel>
     {
     }
 }

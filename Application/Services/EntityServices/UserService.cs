@@ -1,7 +1,10 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
+using Application.Common.Models;
+using Application.Common.Models.Dtos.User;
 using Application.Services.EntityServices.Common;
+using AutoMapper;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -14,8 +17,9 @@ namespace Application.Services.EntityServices
     internal class UserService(
         IUserRepository userRepository,
         ICurrentUserService currentUserService,
-        IPermissionService permissionService)
-        : GenericEntityService<User>(userRepository, permissionService), IUserService
+        IPermissionService permissionService,
+        IMapper mapper)
+        : GenericEntityService<User, CreateUserDto, UpdateUserDto, UserViewModel>(userRepository, permissionService, mapper), IUserService
     {
         private readonly ICurrentUserService _currentUserService = currentUserService;
 
