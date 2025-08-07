@@ -13,15 +13,13 @@ using System.Threading.Tasks;
 namespace Application.Features.User.Commands.Delete
 {
     public class DeleteUserCommandHandler(
-        IMapper mapper,
         IUserService userService
         ) : IRequestHandler<DeleteUserCommand, Response<bool>>
     {
-        private readonly IMapper _mapper = mapper;
         private readonly IUserService _userService = userService;
         public async Task<Response<bool>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
-            var result = await _userService.DeleteAsync(request.UserId, cancellationToken);
+            var result = await _userService.DeleteAsync(request.Id, cancellationToken);
             if (result)
             {
                 return Response<bool>.Ok(true, "User deleted successfully.");

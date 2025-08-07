@@ -23,4 +23,9 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Auth\Commands\SignIn\" />
+    <Folder Include="Features\Auth\Commands\SignUp\" />
+  </ItemGroup>
+
 </Project>

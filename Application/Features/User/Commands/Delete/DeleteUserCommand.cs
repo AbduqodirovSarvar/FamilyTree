@@ -10,6 +10,6 @@ namespace Application.Features.User.Commands.Delete
 {
     public record DeleteUserCommand : IRequest<Response<bool>>
     {
-        public Guid UserId { get; set; }
+        public Guid Id { get; set; }
     }
 }
