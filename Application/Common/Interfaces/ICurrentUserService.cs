@@ -8,6 +8,9 @@ namespace Application.Common.Interfaces
 {
     public interface ICurrentUserService
     {
-        Guid Id { get; set; }
+        Guid? UserId { get; }
+        string? Email { get; }
+        string? Username { get; }
+        string? Role { get; }
     }
 }

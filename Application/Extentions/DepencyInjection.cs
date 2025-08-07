@@ -1,7 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Mappings;
 using Application.Common.Models;
-using Application.Services;
 using AutoMapper;
 using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,8 +21,6 @@ namespace Application.Extentions
             {
                 cfg.RegisterServicesFromAssembly(typeof(DepencyInjection).Assembly);
             });
-
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             services.AddAutoMapper(x =>
             {

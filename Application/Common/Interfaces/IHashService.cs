@@ -8,7 +8,7 @@ namespace Application.Common.Interfaces
 {
     public interface IHashService
     {
-        string GetHash(string key);
-        bool VerifyHash(string key, string hash);
+        string Hash(string password);
+        bool Verify(string password, string hashedPassword);
     }
 }
