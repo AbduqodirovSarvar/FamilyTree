@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Models
 {
-    public class TokenViewModel
+    public record EnumViewModel
     {
-        public string AccessToken { get; set; } = string.Empty;
-        public string RefreshToken { get; set; } = string.Empty;
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
     }
 }

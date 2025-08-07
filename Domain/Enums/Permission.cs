@@ -8,28 +8,27 @@ namespace Domain.Enums
 {
     public enum Permission
     {
-        // Family Permissions
-        FamilyCreate = 1,
-        FamilyRead = 2,
-        FamilyUpdate = 3,
-        FamilyDelete = 4,
+        // Family Operations
+        GET_FAMILY = 1,
+        CREATE_FAMILY = 2,
+        UPDATE_FAMILY = 3,
+        DELETE_FAMILY = 4,
 
-        // User Permissions
-        UserCreate = 5,
-        UserRead = 6,
-        UserUpdate = 7,
-        UserDelete = 8,
+        // Member Operations
+        GET_MEMBER = 5,
+        CREATE_MEMBER = 6,
+        UPDATE_MEMBER = 7,
+        DELETE_MEMBER = 8,
 
-        // Role Permissions
-        RoleCreate = 9,
-        RoleRead = 10,
-        RoleUpdate = 11,
-        RoleDelete = 12,
+        // User Operations
+        GET_USER = 9,
+        UPDATE_USER = 10,
+        DELETE_USER = 11,
 
-        // Full Permissions
-        FullCreate = 13,
-        FullRead = 14,
-        FullUpdate = 15,
-        FullDelete = 16,
+        // Role Operations
+        GET_ROLE = 12,
+        CREATE_ROLE = 13,
+        UPDATE_ROLE = 14,
+        DELETE_ROLE = 15
     }
 }

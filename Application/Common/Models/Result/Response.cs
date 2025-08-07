@@ -1,0 +1,45 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.Common.Models.Result
+{
+    public class Response<TEntity>
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public List<string>? Errors { get; set; }
+        public TEntity? Data { get; set; } = default;
+        public int? PageIndex { get; set; } = null;
+        public int? PageSize { get; set; } = null;
+        public int? TotalCount { get; set; } = null;
+        public bool IsPaginated => PageIndex.HasValue && PageSize.HasValue && TotalCount.HasValue;
+
+        public static Response<TEntity> Ok(string? message = null)
+        => new() { Success = true, Message = message };
+
+        public static Response<TEntity> Ok(TEntity data, string? message = null)
+            => new() { Success = true, Message = message, Data = data };
+
+        public static Response<TEntity> Ok(TEntity data, int pageIndex, int pageSize, int totalCount, string? message = null)
+            => new()
+            {
+                Success = true,
+                Message = message,
+                Data = data,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+        public static Response<TEntity> Fail(string message, List<string>? errors = null)
+            => new()
+            {
+                Success = false,
+                Message = message,
+                Errors = errors
+            };
+    }
+}

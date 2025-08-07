@@ -1,5 +1,5 @@
 ﻿using Application.Common.Interfaces;
-using Application.Common.Models;
+using Application.Common.Models.Result;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Persistence.Models;

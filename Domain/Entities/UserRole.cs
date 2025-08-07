@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,11 @@ namespace Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; } = null;
+        public string? DesignedName { get; set; } = null;
 
         public Guid? FamilyId { get; set; }
         public Family? Family { get; set; }
+
+        public ICollection<UserRolePermission> Permissions { get; set; } = [];
     }
 }

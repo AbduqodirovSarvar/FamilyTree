@@ -1,4 +1,4 @@
-﻿using Application.Common.Models;
+﻿using Application.Common.Models.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
