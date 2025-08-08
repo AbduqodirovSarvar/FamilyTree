@@ -17,5 +17,6 @@ namespace Application.Common.Models.Dtos.User
         public string? Email { get; init; } = null;
         public Guid? FamilyId { get; init; } = null;
         public Guid? RoleId { get; init; } = null;
+        public ChangeUserPasswordDto? Password { get; init; } = null;
     }
 }

@@ -13,5 +13,6 @@ namespace Application.Common.Models.Request
         public string? SearchText { get; init; } = null;
         public string? SortBy { get; init; } = "CreatedAt";
         public string SortDirection { get; init; } = "desc";
+        public Dictionary<string, string> Filters { get; set; } = [];
     }
 }

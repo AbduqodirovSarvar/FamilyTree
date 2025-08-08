@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces.EntityServices;
 using Application.Common.Models;
 using Application.Common.Models.Result;
+using Application.Extentions;
 using Application.Services.EntityServices;
 using MediatR;
 using System;
@@ -20,14 +21,9 @@ namespace Application.Features.Family.Queries.GetList
         public async Task<Response<List<FamilyViewModel>>> Handle(GetFamilyListQuery request, CancellationToken cancellationToken)
         {
             Expression<Func<Domain.Entities.Family, bool>>? predicate = null;
-            if (!string.IsNullOrWhiteSpace(request.SearchText))
+            if (request.Filters != null && request.Filters.Any())
             {
-                var search = request.SearchText.ToLower();
-
-                predicate = user =>
-                    (user.Name != null && user.Name.ToLower().Contains(search)) ||
-                    (user.FamilyName != null && user.FamilyName.ToLower().Contains(search)) ||
-                    (user.Description != null && user.Description.ToLower().Contains(search));
+                predicate = request.Filters.BuildPredicate<Domain.Entities.Family>();
             }
 
             return await _familyService.GetAllAsync(predicate, request.PageIndex, request.PageSize, cancellationToken);

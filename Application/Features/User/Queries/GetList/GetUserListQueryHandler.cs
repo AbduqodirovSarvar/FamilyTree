@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces.EntityServices;
 using Application.Common.Models;
 using Application.Common.Models.Result;
+using Application.Extentions;
 using AutoMapper;
 using MediatR;
 using System;
@@ -22,16 +23,9 @@ namespace Application.Features.User.Queries.GetList
         public async Task<Response<List<UserViewModel>>> Handle(GetUserListQuery request, CancellationToken cancellationToken)
         {
             Expression<Func<Domain.Entities.User, bool>>? predicate = null;
-            if (!string.IsNullOrWhiteSpace(request.SearchText))
+            if (request.Filters != null && request.Filters.Any())
             {
-                var search = request.SearchText.ToLower();
-
-                predicate = user =>
-                    user.FirstName != null && user.FirstName.ToLower().Contains(search) ||
-                    user.LastName != null && user.LastName.ToLower().Contains(search) ||
-                    user.UserName != null && user.UserName.ToLower().Contains(search) ||
-                    user.Email != null && user.Email.ToLower().Contains(search) ||
-                    user.Phone != null && user.Phone.ToLower().Contains(search);
+                predicate = request.Filters.BuildPredicate<Domain.Entities.User>();
             }
 
             return await _userService.GetAllAsync(predicate, request.PageIndex, request.PageSize, cancellationToken);

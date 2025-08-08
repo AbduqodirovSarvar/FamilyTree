@@ -26,8 +26,8 @@
   <ItemGroup>
     <Folder Include="Features\Auth\Commands\SignIn\" />
     <Folder Include="Features\Auth\Commands\SignUp\" />
+    <Folder Include="Features\Auth\Commands\Reset\" />
     <Folder Include="Features\UserRole\" />
-    <Folder Include="Features\UploadedFile\" />
     <Folder Include="Features\UserRolePermission\" />
   </ItemGroup>
 

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.EntityServices
 {
-    internal interface IUploadedFileService 
+    public interface IUploadedFileService 
         : IGenericEntityService<UploadedFile, CreateUploadedFileDto, UpdateUploadedFileDto, UploadedFileViewModel>
     {
     }

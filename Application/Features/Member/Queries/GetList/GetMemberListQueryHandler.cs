@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces.EntityServices;
 using Application.Common.Models;
 using Application.Common.Models.Result;
+using Application.Extentions;
 using Application.Services.EntityServices;
 using MediatR;
 using System;
@@ -20,14 +21,9 @@ namespace Application.Features.Member.Queries.GetList
         public async Task<Response<List<MemberViewModel>>> Handle(GetMemberListQuery request, CancellationToken cancellationToken)
         {
             Expression<Func<Domain.Entities.Member, bool>>? predicate = null;
-            if (!string.IsNullOrWhiteSpace(request.SearchText))
+            if (request.Filters != null && request.Filters.Any())
             {
-                var search = request.SearchText.ToLower();
-
-                predicate = user =>
-                    (user.FirstName != null && user.FirstName.ToLower().Contains(search)) ||
-                    (user.LastName != null && user.LastName.ToLower().Contains(search)) ||
-                    (user.Description != null && user.Description.ToLower().Contains(search));
+                predicate = request.Filters.BuildPredicate<Domain.Entities.Member>();
             }
 
             return await _memberService.GetAllAsync(predicate, request.PageIndex, request.PageSize, cancellationToken);
