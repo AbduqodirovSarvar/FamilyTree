@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Interfaces.EntityServices
 {
-    internal interface IUserRoleService 
+    public interface IUserRoleService 
         : IGenericEntityService<UserRole, CreateUserRoleDto, UpdateUserRoleDto, UserRoleViewModel>
     {
     }

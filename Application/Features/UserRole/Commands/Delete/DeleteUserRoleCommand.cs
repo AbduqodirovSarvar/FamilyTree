@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Features.UploadedFile.Queries.GetOne
+namespace Application.Features.UserRole.Commands.Delete
 {
-    public record GetUploadedFileQuery : IRequest<byte[]>
+    public record DeleteUserRoleCommand : IRequest<Response<bool>>
     {
         public Guid Id { get; init; }
     }
