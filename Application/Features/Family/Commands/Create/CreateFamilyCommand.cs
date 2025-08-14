@@ -1,6 +1,6 @@
-﻿using Application.Common.Models;
-using Application.Common.Models.Dtos.Family;
+﻿using Application.Common.Models.Dtos.Family;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
 using MediatR;
 using System;
 using System.Collections.Generic;

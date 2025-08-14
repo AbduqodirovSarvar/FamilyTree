@@ -10,6 +10,6 @@ namespace Application.Common.Models.Dtos.Common
     public abstract record BaseUpdateDto
     {
         [Required(ErrorMessage = "Id is required.")]
-        public int Id { get; set; }
+        public Guid Id { get; init; }
     }
 }

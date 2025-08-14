@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.Result;
+﻿using Application.Common.Models.Dtos.Common;
+using Application.Common.Models.Result;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.UserRole.Commands.Delete
 {
-    public record DeleteUserRoleCommand : IRequest<Response<bool>>
+    public record DeleteUserRoleCommand : BaseDeleteDto, IRequest<Response<bool>>
     {
-        public Guid Id { get; init; }
     }
 }

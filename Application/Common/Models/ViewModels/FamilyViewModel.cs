@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Common.Models
+namespace Application.Common.Models.ViewModels
 {
     public record FamilyViewModel : BaseViewModel
     {

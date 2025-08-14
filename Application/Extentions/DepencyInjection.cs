@@ -1,6 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Mappings;
-using Application.Common.Models;
+using Application.Common.Models.ViewModels;
 using AutoMapper;
 using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;

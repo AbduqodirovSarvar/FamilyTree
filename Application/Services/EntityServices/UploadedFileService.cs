@@ -1,8 +1,8 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
-using Application.Common.Models;
 using Application.Common.Models.Dtos.UploadedFile;
+using Application.Common.Models.ViewModels;
 using Application.Services.EntityServices.Common;
 using AutoMapper;
 using Domain.Entities;

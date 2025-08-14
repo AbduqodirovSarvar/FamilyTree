@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Models.Dtos.Auth
 {
-    public class ResetSignInDto
+    public abstract record ResetSignInDto
     {
+
     }
 }

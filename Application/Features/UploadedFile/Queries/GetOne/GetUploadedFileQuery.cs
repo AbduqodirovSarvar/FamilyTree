@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.Result;
+﻿using Application.Common.Models.Request;
+using Application.Common.Models.Result;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.UploadedFile.Queries.GetOne
 {
-    public record GetUploadedFileQuery : IRequest<byte[]>
+    public record GetUploadedFileQuery : BaseGetOneQuery, IRequest<byte[]>
     {
-        public Guid Id { get; init; }
     }
 }

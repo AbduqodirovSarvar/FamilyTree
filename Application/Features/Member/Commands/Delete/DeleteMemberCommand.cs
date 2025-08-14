@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.Result;
+﻿using Application.Common.Models.Dtos.Common;
+using Application.Common.Models.Result;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Member.Commands.Delete
 {
-    public record DeleteMemberCommand : IRequest<Response<bool>>
+    public record DeleteMemberCommand : BaseDeleteDto, IRequest<Response<bool>>
     {
-        [Required]
-        public Guid Id { get; init; }
     }
 }

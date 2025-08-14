@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.Result;
+﻿using Application.Common.Models.Dtos.Common;
+using Application.Common.Models.Result;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -9,9 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.UploadedFile.Commands.Delete
 {
-    public record DeleteUploadedFileCommand : IRequest<Response<bool>>
+    public record DeleteUploadedFileCommand : BaseDeleteDto, IRequest<Response<bool>>
     {
-        [Required(ErrorMessage = "File ID is required.")]
-        public Guid Id { get; init; }
     }
 }

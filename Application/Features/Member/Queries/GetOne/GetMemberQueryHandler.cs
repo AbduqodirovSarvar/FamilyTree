@@ -1,6 +1,6 @@
 ﻿using Application.Common.Interfaces.EntityServices;
-using Application.Common.Models;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
 using Application.Services.EntityServices;
 using MediatR;
 using System;
@@ -18,12 +18,7 @@ namespace Application.Features.Member.Queries.GetOne
         private readonly IMemberService _memberService = memberService;
         public async Task<Response<MemberViewModel>> Handle(GetMemberQuery request, CancellationToken cancellationToken)
         {
-            MemberViewModel? result;
-            if (!request.Id.HasValue || request.Id == Guid.Empty)
-            {
-                return Response<MemberViewModel>.Fail("Member ID is required to retrieve member details.");
-            }
-            result = await _memberService.GetByIdAsync(request.Id.Value, cancellationToken)
+            var result = await _memberService.GetByIdAsync(request.Id, cancellationToken)
                              ?? throw new KeyNotFoundException("Member not found.");
 
             return Response<MemberViewModel>.Ok(result, "Member retrieved successfully.");

@@ -1,6 +1,6 @@
-﻿using Application.Common.Models;
-using Application.Common.Models.Dtos.User;
+﻿using Application.Common.Models.Dtos.User;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
 using Domain.Behaviours;
 using Domain.Entities;
 using MediatR;

@@ -1,4 +1,4 @@
-﻿using Application.Common.Models;
+﻿using Application.Common.Models.ViewModels;
 using AutoMapper;
 using Domain.Enums;
 using System;

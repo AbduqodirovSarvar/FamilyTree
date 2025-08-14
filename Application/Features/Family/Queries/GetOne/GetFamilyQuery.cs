@@ -1,5 +1,6 @@
-﻿using Application.Common.Models;
+﻿using Application.Common.Models.Request;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -9,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Family.Queries.GetOne
 {
-    public record GetFamilyQuery : IRequest<Response<FamilyViewModel>>
+    public record GetFamilyQuery : BaseGetOneQuery, IRequest<Response<FamilyViewModel>>
     {
-        public Guid? Id { get; init; } = null;
-        public string FamilyName { get; set; } = null!;
+        public new Guid? Id { get; init; }
+        public string? FamilyName { get; set; } = null;
     }
 }

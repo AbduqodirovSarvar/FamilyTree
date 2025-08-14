@@ -1,6 +1,6 @@
 ﻿using Application.Common.Interfaces.EntityServices;
-using Application.Common.Models;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
 using Application.Extentions;
 using Application.Services.EntityServices;
 using MediatR;

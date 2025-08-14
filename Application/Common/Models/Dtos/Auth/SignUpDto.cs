@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.Common.Models.Dtos.Auth
 {
-    public class SignUpDto
+    public record SignUpDto
     {
     }
 }
