@@ -115,36 +115,5 @@ namespace Application.Services.EntityServices.Common
                                 ?? throw new KeyNotFoundException("Entity not found");
             return _mapper.Map<TEntityViewModel>(entity);
         }
-
-        //protected Permission GetPermission(string operation)
-        //{
-        //    var entityType = typeof(TEntity).Name;
-
-        //    return (entityType, operation) switch
-        //    {
-        //        ("Family", "GET") => Permission.GET_FAMILY,
-        //        ("Family", "CREATE") => Permission.CREATE_FAMILY,
-        //        ("Family", "UPDATE") => Permission.UPDATE_FAMILY,
-        //        ("Family", "DELETE") => Permission.DELETE_FAMILY,
-
-        //        ("Member", "GET") => Permission.GET_MEMBER,
-        //        ("Member", "CREATE") => Permission.CREATE_MEMBER,
-        //        ("Member", "UPDATE") => Permission.UPDATE_MEMBER,
-        //        ("Member", "DELETE") => Permission.DELETE_MEMBER,
-
-        //        ("User", "GET") => Permission.GET_USER,
-        //        ("User", "CREATE") => Permission.CREATE_USER,
-        //        ("User", "UPDATE") => Permission.UPDATE_USER,
-        //        ("User", "DELETE") => Permission.DELETE_USER,
-
-        //        ("Family", "GET") => Permission.GET_FAMILY,
-        //        ("Family", "CREATE") => Permission.CREATE_FAMILY,
-        //        ("Family", "UPDATE") => Permission.UPDATE_FAMILY,
-        //        ("Family", "DELETE") => Permission.DELETE_FAMILY,
-
-        //        _ => throw new ArgumentException($"Unsupported permission for type: {entityType} and operation: {operation}")
-        //    };
-        //}
-
     }
 }
