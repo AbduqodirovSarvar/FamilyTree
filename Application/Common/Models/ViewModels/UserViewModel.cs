@@ -13,16 +13,16 @@ namespace Application.Common.Models.ViewModels
 {
     public record UserViewModel : BaseViewModel
     {
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? UserName { get; set; }
-        public string? Phone { get; set; }
-        public string? Email { get; set; }
+        public string? FirstName { get; init; }
+        public string? LastName { get; init; }
+        public string? UserName { get; init; }
+        public string? Phone { get; init; }
+        public string? Email { get; init; }
 
-        public Guid FamilyId { get; set; }
-        public FamilyViewModel? Family { get; set; }
+        public Guid FamilyId { get; init; }
+        public FamilyViewModel? Family { get; init; }
 
-        public Guid RoleId { get; set; }
-        public UserRoleViewModel? Role { get; set; }
+        public Guid RoleId { get; init; }
+        public UserRoleViewModel? Role { get; init; }
     }
 }

@@ -9,10 +9,10 @@ namespace Application.Common.Models.Dtos.Family
 {
     public record UpdateFamilyDto : BaseUpdateDto
     {
-        public string? Name { get; set; } = null;
-        public string? Description { get; set; } = null;
-        public string? FamilyName { get; set; } = null;
-        public Guid? ImageId { get; set; } = null;
-        public Guid? OwnerId { get; set; } = null;
+        public string? Name { get; init; } = null;
+        public string? Description { get; init; } = null;
+        public string? FamilyName { get; init; } = null;
+        public Guid? ImageId { get; init; } = null;
+        public Guid? OwnerId { get; init; } = null;
     }
 }

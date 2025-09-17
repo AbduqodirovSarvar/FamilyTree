@@ -13,7 +13,7 @@ namespace Persistence.Services
     {
         private readonly JWTConfiguration _configuration = config.Value;
 
-        public TokenViewModel GetToken(Claim[] claims)
+        public TokenViewModel GenerateToken(Claim[] claims)
         {
             Claim[] jwtClaim =
             [

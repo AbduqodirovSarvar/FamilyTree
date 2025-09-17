@@ -11,8 +11,8 @@ namespace Application.Common.Models.ViewModels
 {
     public record UserRolePermissionViewModel : BaseViewModel
     {
-        public Guid UserRoleId { get; set; }
-        public UserRoleViewModel? UserRole { get; set; }
-        public Permission Permission { get; set; } = Permission.GET_FAMILY;
+        public Guid UserRoleId { get; init; }
+        public UserRoleViewModel? UserRole { get; init; }
+        public Permission Permission { get; init; } = Permission.GET_FAMILY;
     }
 }

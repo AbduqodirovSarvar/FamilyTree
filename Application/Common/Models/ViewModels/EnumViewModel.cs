@@ -8,7 +8,7 @@ namespace Application.Common.Models.ViewModels
 {
     public record EnumViewModel
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = null!;
+        public int Id { get; init; }
+        public string Name { get; init; } = null!;
     }
 }

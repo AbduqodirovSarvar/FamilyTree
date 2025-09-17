@@ -40,9 +40,9 @@ namespace Application.Extentions
                     "notequals" => Expression.NotEqual(left, right),
                     "greaterthan" or "morethan" => Expression.GreaterThan(left, right),
                     "lessthan" => Expression.LessThan(left, right),
-                    "contains" => Expression.Call(left, typeof(string).GetMethod("Contains", new[] { typeof(string) })!, Expression.Constant(valueString)),
-                    "startswith" => Expression.Call(left, typeof(string).GetMethod("StartsWith", new[] { typeof(string) })!, Expression.Constant(valueString)),
-                    "endswith" => Expression.Call(left, typeof(string).GetMethod("EndsWith", new[] { typeof(string) })!, Expression.Constant(valueString)),
+                    "contains" => Expression.Call(left, typeof(string).GetMethod("Contains", [typeof(string)])!, Expression.Constant(valueString)),
+                    "startswith" => Expression.Call(left, typeof(string).GetMethod("StartsWith", [typeof(string)])!, Expression.Constant(valueString)),
+                    "endswith" => Expression.Call(left, typeof(string).GetMethod("EndsWith", [typeof(string)])!, Expression.Constant(valueString)),
                     _ => null
                 };
 

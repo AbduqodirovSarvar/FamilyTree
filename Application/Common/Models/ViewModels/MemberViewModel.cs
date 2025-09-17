@@ -11,29 +11,22 @@ namespace Application.Common.Models.ViewModels
 {
     public record MemberViewModel : BaseViewModel
     {
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Description { get; set; }
-        public DateOnly BirthDay { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-        public DateOnly? DeathDay { get; set; }
-
-        public Gender Gender { get; set; } = Gender.MALE;
-
-        public Guid FamilyId { get; set; }
-        public FamilyViewModel? Family { get; set; }
-
-        public Guid? ImageId { get; set; }
-        public UploadedFileViewModel? Image { get; set; }
-
-        public Guid? FatherId { get; set; } = null;
-        public MemberViewModel? Father { get; set; }
-
-        public Guid? MotherId { get; set; } = null;
-        public MemberViewModel? Mother { get; set; }
-
-        public Guid? SpouseId { get; set; } = null;
-        public MemberViewModel? Spouse { get; set; }
-
-        public ICollection<MemberViewModel> Children { get; set; } = [];
+        public string? FirstName { get; init; }
+        public string? LastName { get; init; }
+        public string? Description { get; init; }
+        public DateOnly BirthDay { get; init; }
+        public DateOnly? DeathDay { get; init; }
+        public Gender Gender { get; init; }
+        public Guid FamilyId { get; init; }
+        public FamilyViewModel? Family { get; init; }
+        public Guid? ImageId { get; init; }
+        public UploadedFileViewModel? Image { get; init; }
+        public Guid? FatherId { get; init; } = null;
+        public MemberViewModel? Father { get; init; }
+        public Guid? MotherId { get; init; } = null;
+        public MemberViewModel? Mother { get; init; }
+        public Guid? SpouseId { get; init; } = null;
+        public MemberViewModel? Spouse { get; init; }
+        public ICollection<MemberViewModel> Children { get; init; } = [];
     }
 }

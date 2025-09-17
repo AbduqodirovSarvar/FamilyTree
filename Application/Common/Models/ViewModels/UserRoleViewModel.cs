@@ -11,13 +11,13 @@ namespace Application.Common.Models.ViewModels
 {
     public record UserRoleViewModel : BaseViewModel
     {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? DesignedName { get; set; }
+        public string? Name { get; init; }
+        public string? Description { get; init; }
+        public string? DesignedName { get; init; }
 
-        public Guid? FamilyId { get; set; }
-        public FamilyViewModel? Family { get; set; }
+        public Guid? FamilyId { get; init; }
+        public FamilyViewModel? Family { get; init; }
 
-        public ICollection<Permission> Permissions { get; set; } = [];
+        public ICollection<Permission> Permissions { get; init; } = [];
     }
 }

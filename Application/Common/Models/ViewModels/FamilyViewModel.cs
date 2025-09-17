@@ -10,16 +10,14 @@ namespace Application.Common.Models.ViewModels
 {
     public record FamilyViewModel : BaseViewModel
     {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? FamilyName { get; set; }
-
-        public Guid? ImageId { get; set; }
-        public UploadedFileViewModel? Image { get; set; }
-
-        public Guid? OwnerId { get; set; }
-        public UserViewModel? Owner { get; set; }
-        public ICollection<UserViewModel> Users { get; set; } = [];
-        public ICollection<MemberViewModel> Members { get; set; } = [];
+        public string? Name { get; init; }
+        public string? Description { get; init; }
+        public string? FamilyName { get; init; }
+        public Guid? ImageId { get; init; }
+        public UploadedFileViewModel? Image { get; init; }
+        public Guid? OwnerId { get; init; }
+        public UserViewModel? Owner { get; init; }
+        public ICollection<UserViewModel> Users { get; init; } = [];
+        public ICollection<MemberViewModel> Members { get; init; } = [];
     }
 }
