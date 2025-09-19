@@ -1,5 +1,7 @@
-﻿using Application.Common.Interfaces.Repositories;
+﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces.Repositories;
 using Domain.Entities;
+using Persistence.Data;
 using Persistence.Services.Repositories.Common;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace Persistence.Services.Repositories
 {
-    public class UserRepository : GenericRepository<User>, IUserRepository
+    public class UserRepository(AppDbContext context, IRedisService redisService) 
+        : GenericRepository<User>(context, redisService), IUserRepository
     {
     }
 }

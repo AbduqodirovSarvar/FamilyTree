@@ -21,8 +21,8 @@ namespace Persistence.Extentions
         {
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-            services.AddScoped<IHashService, HashService>();
-            services.AddScoped<ITokenService, TokenService>();
+            services.AddSingleton<IHashService, HashService>();
+            services.AddSingleton<ITokenService, TokenService>();
             services.AddScoped<IPermissionService, PermissionService>();
 
             services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));

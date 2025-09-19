@@ -1,5 +1,9 @@
 ﻿
+using Application.Common.Interfaces;
 using Application.Common.Interfaces.Repositories.Common;
+using Domain.Common;
+using Microsoft.EntityFrameworkCore;
+using Persistence.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,40 +14,100 @@ using System.Threading.Tasks;
 namespace Persistence.Services.Repositories.Common
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity>
+        where TEntity : BaseEntity
     {
-        public virtual Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        protected readonly AppDbContext _context;
+        protected readonly DbSet<TEntity> _dbSet;
+        protected readonly IRedisService _redisService;
+
+        public GenericRepository(AppDbContext context, IRedisService redisService)
         {
-            throw new NotImplementedException();
+            _context = context;
+            _dbSet = _context.Set<TEntity>();
+            _redisService = redisService;
         }
 
-        public virtual Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            await _dbSet.AddAsync(entity, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _redisService.SetAsync(entity.Id.ToString(), entity);
+            return entity;
         }
 
-        public virtual Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            _dbSet.Update(entity);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _redisService.RemoveAsync(entity.Id.ToString());
+            await _redisService.SetAsync(entity.Id.ToString(), entity);
+            return entity;
         }
 
-        public virtual Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            _dbSet.Remove(entity);
+            await _redisService.RemoveAsync(entity.Id.ToString());
+            return await _context.SaveChangesAsync(cancellationToken) > 0;
         }
 
-        public virtual Task<(List<TEntity> Data, int TotalItems)> GetPaginatedAsync(Expression<Func<TEntity, bool>>? predicate = null, int pageIndex = 0, int pageSize = 10, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null, CancellationToken cancellationToken = default)
+        public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _dbSet.AnyAsync(predicate, cancellationToken);
+        }
+
+        public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var result = await _redisService.GetAsync<TEntity>(id.ToString());
+            return result ?? await _dbSet.FindAsync([id], cancellationToken);
+        }
+
+        public virtual async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
+        }
+
+        public virtual async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public virtual async Task<(List<TEntity> Data, int TotalItems)> GetPaginatedAsync(
+            Expression<Func<TEntity, bool>>? predicate = null,
+            int pageIndex = 0,
+            int pageSize = 10,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+            CancellationToken cancellationToken = default)
+        {
+            IQueryable<TEntity> query = _dbSet;
+
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            int totalItems = await query.CountAsync(cancellationToken);
+
+            if (orderBy != null)
+                query = orderBy(query);
+
+            var data = await query
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (data, totalItems);
         }
 
         public virtual IQueryable<TEntity> Query(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
+            IQueryable<TEntity> query = _dbSet;
+            if (predicate != null)
+                query = query.Where(predicate);
 
-        public virtual Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            return query;
         }
     }
 }

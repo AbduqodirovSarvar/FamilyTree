@@ -11,22 +11,22 @@ namespace Persistence.Services
     {
         public Task<bool> ExistsAsync(string key)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public Task<T?> GetAsync<T>(string key)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<T?>(default);
         }
 
         public Task<bool> RemoveAsync(string key)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

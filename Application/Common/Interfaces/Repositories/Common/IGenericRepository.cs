@@ -12,6 +12,8 @@ namespace Application.Common.Interfaces.Repositories.Common
         Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
+        Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+        Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
         Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
         Task<(List<TEntity> Data, int TotalItems)> GetPaginatedAsync(
