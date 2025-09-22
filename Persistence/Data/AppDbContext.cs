@@ -30,11 +30,5 @@ namespace Persistence.Data
             base.OnConfiguring(optionsBuilder);
             optionsBuilder.EnableSensitiveDataLogging();
         }
-
-        public Task Seed()
-        {
-            using var scope = this.GetService<AppDbContext>();
-            return Task.CompletedTask;
-        }
     }
 }
