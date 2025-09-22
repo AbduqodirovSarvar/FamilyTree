@@ -12,7 +12,6 @@ namespace Application.Common.Interfaces
     public interface IPermissionService
     {
         Task<bool> CheckPermission(string entityName, OperationType operation, User? user = null);
-
         Permission GetPermission(string entityName, OperationType operation);
     }
 }

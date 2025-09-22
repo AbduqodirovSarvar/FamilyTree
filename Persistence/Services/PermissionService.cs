@@ -13,13 +13,13 @@ namespace Persistence.Services
 {
     public class PermissionService(
         IUserRolePermissionRepository userRolePermissionRepository,
-        IUserService userService) : IPermissionService
+        ICurrentUserService currentUserService) : IPermissionService
     {
         private readonly IUserRolePermissionRepository _repository = userRolePermissionRepository;
-        private readonly IUserService _userService = userService;
+        private readonly ICurrentUserService _currentUserService = currentUserService;
         public async Task<bool> CheckPermission(string entityName, OperationType operation, User? user = null)
         {
-            user ??= await _userService.GetCurrentUser()
+            user ??= await _currentUserService.GetCurrentUserAsync()
                         ?? throw new UnauthorizedAccessException("User not found");
 
             var permission = GetPermission(entityName, operation);

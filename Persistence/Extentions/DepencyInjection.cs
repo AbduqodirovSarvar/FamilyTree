@@ -12,6 +12,8 @@ using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Persistence.Services.Repositories.Common;
+using Application.Common.Interfaces.Repositories;
+using Persistence.Services.Repositories;
 
 namespace Persistence.Extentions
 {
@@ -20,6 +22,12 @@ namespace Persistence.Extentions
         public static IServiceCollection AddInfrastructureDepencies(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IFamilyRepository, FamilyRepository>();
+            services.AddScoped<IMemberRepository, MemberRepository>();
+            services.AddScoped<IUploadedFileRepository, UploadedFileRepository>();
+            services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+            services.AddScoped<IUserRolePermissionRepository, UserRolePermissionRepository>();
 
             services.AddSingleton<IHashService, HashService>();
             services.AddSingleton<ITokenService, TokenService>();

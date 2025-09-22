@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,7 @@ namespace Application.Common.Interfaces
         string? Email { get; }
         string? Username { get; }
         string? Role { get; }
+
+        Task<User?> GetCurrentUserAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -12,14 +12,13 @@ namespace Persistence.Services
     public class TokenService(IOptions<JWTConfiguration> config) : ITokenService
     {
         private readonly JWTConfiguration _configuration = config.Value;
-
-        public TokenViewModel GenerateToken(Claim[] claims)
+        public TokenViewModel GenerateToken(Claim[] userClaims)
         {
-            Claim[] jwtClaim =
-            [
+            var jwtClaim = new[]
+            {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, DateTime.UtcNow.ToString()),
-            ];
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            };
 
             var credentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Secret)),
@@ -29,27 +28,11 @@ namespace Persistence.Services
             var token = new JwtSecurityToken(
                 _configuration.ValidIssuer,
                 _configuration.ValidAudience,
-                claims.Concat(jwtClaim),
+                userClaims.Concat(jwtClaim),
                 expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();
-
-            //var refreshClaims = new[]
-            //{
-            //    new Claim("type", "refresh"),
-            //    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            //};
-
-            //var refreshToken = new JwtSecurityToken(
-            //    issuer: config.ValidIssuer,
-            //    audience: config.ValidAudience,
-            //    claims: refreshClaims,
-            //    expires: DateTime.UtcNow.AddDays(7),
-            //    signingCredentials: credentials
-            //);
-
-            //var refreshTokenString = new JwtSecurityTokenHandler().WriteToken(refreshToken);
 
             return new TokenViewModel
             {
@@ -57,5 +40,6 @@ namespace Persistence.Services
                 RefreshToken = string.Empty
             };
         }
+
     }
 }
