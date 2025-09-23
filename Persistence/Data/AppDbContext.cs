@@ -1,6 +1,5 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +11,12 @@ namespace Persistence.Data
 {
     public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
-        public DbSet<User> Users { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
-        public DbSet<UserRolePermission> UserRolePermissions { get; set; }
-        public DbSet<Family> Families { get; set; }
-        public DbSet<Member> Members { get; set; }
-        public DbSet<UploadedFile> UploadedFiles { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<UserRole> UserRoles { get; set; }
+        public virtual DbSet<UserRolePermission> UserRolePermissions { get; set; }
+        public virtual DbSet<Family> Families { get; set; }
+        public virtual DbSet<Member> Members { get; set; }
+        public virtual DbSet<UploadedFile> UploadedFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,10 +24,10 @@ namespace Persistence.Data
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-            optionsBuilder.EnableSensitiveDataLogging();
-        }
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    base.OnConfiguring(optionsBuilder);
+        //    optionsBuilder.EnableSensitiveDataLogging();
+        //}
     }
 }

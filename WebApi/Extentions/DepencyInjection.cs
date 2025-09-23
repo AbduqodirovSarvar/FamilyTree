@@ -9,8 +9,9 @@ namespace WebApi.Extentions
         public static IServiceCollection AdApiDepencies(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpContextAccessor();
-            services.AddApplicationDepencies();
+           
             services.AddInfrastructureDepencies(configuration);
+            services.AddApplicationDepencies();
             services.AddSwagger();
             services.AddEndpointsApiExplorer();
             services.AddControllers();

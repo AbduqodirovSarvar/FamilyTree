@@ -14,7 +14,7 @@ namespace Persistence.Data.Configuration
         public override void Configure(EntityTypeBuilder<UserRole> builder)
         {
             base.Configure(builder);
-            builder.HasIndex(ur => ur.DesignedName).IsUnique();
+            builder.HasIndex(ur => new { ur.FamilyId, ur.DesignedName }).IsUnique();
         }
     }
 }

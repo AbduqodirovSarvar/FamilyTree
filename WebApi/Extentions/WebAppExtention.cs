@@ -22,25 +22,46 @@ namespace WebApi.Extentions
             app.MapControllers();
 
 
-            app.UpdateMigration();
-            app.Seed();
+            //app.UpdateMigration();
+            //app.Seed();
 
             return app;
         }
 
         private static void UpdateMigration(this WebApplication app)
         {
+            Console.WriteLine("Update MIgration boshlanmoqda...");
             using var scope = app.Services.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            dbContext.Database.Migrate();
+            Console.WriteLine("SCOPE...");
+            try
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                Console.WriteLine("DBCONTEXT...");
+                dbContext.Database.Migrate();
+                Console.WriteLine("MIGRATE...");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Migrationda xato: " + ex.Message);
+                throw;
+            }
         }
 
         private static void Seed(this WebApplication app)
         {
             using var scope = app.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var hashService = scope.ServiceProvider.GetRequiredService<IHashService>();
-            AppDbContextSeeder.Seed(context, hashService);
+            try
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var hashService = scope.ServiceProvider.GetRequiredService<IHashService>();
+                AppDbContextSeeder.Seed(context, hashService);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Seedda xato: " + ex.Message);
+                throw;
+            }
         }
+
     }
 }

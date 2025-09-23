@@ -33,7 +33,7 @@ namespace Persistence.Extentions
             services.AddSingleton<ITokenService, TokenService>();
             services.AddScoped<IPermissionService, PermissionService>();
 
-            services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+            //services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));
             services.AddScoped<IRedisService, RedisService>();
 
             services.AddScoped<AuditableEntitySaveChangesInterceptor>();
@@ -41,8 +41,7 @@ namespace Persistence.Extentions
             {
                 var interceptor = serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>();
 
-                options.UseNpgsql(configuration.GetConnectionString("PostgreSqlConnection"),
-                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+                options.UseNpgsql(configuration.GetConnectionString("PostgreSqlConnection"));
 
                 options.AddInterceptors(interceptor);
             });

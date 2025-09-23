@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Persistence.Data.Configuration.Common;
 using System;
@@ -17,6 +18,11 @@ namespace Persistence.Data.Configuration
             builder.HasIndex(u => u.Phone).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.UserName).IsUnique();
-        }
+
+            builder.HasOne(u => u.Family)
+            .WithMany(f => f.Users)
+            .HasForeignKey(u => u.FamilyId)
+            .OnDelete(DeleteBehavior.Cascade);
+                }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Persistence.Data.Configuration.Common;
 using System;
@@ -16,6 +17,16 @@ namespace Persistence.Data.Configuration
             base.Configure(builder);
             builder.HasIndex(f => f.FamilyName).IsUnique();
             builder.HasIndex(f => f.ImageId).IsUnique();
+
+            builder.HasOne(f => f.Owner)
+                .WithOne() // Ownerning alohida "OwnedFamilies" kolleksiyasi yo‘q
+                .HasForeignKey<Family>(f => f.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(f => f.Users)
+                .WithOne(u => u.Family)
+                .HasForeignKey(u => u.FamilyId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
