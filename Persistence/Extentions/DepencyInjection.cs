@@ -33,7 +33,7 @@ namespace Persistence.Extentions
             services.AddSingleton<ITokenService, TokenService>();
             services.AddScoped<IPermissionService, PermissionService>();
 
-            //services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+            services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));
             services.AddScoped<IRedisService, RedisService>();
 
             services.AddScoped<AuditableEntitySaveChangesInterceptor>();

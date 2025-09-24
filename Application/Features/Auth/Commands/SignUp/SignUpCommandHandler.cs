@@ -17,10 +17,9 @@ namespace Application.Features.Auth.Commands.SignUp
         private readonly IAuthService _authService = authService;
         public async Task<Response<bool>> Handle(SignUpCommand request, CancellationToken cancellationToken)
         {
-            var result  = await _authService.SignUpAsync(request, cancellationToken)
-                                  ?? throw new InvalidOperationException("Sign up failed.");
+            var result = await _authService.SignUpAsync(request, cancellationToken);
 
-            return Response<bool>.Ok(result != null, "Sign up successful.");
+            return Response<bool>.Ok(result, "Sign up successful.");
         }
     }
 }

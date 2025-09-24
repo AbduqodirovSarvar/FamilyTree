@@ -23,6 +23,15 @@ namespace Application.Services.EntityServices
     {
         private readonly ICurrentUserService _currentUserService = currentUserService;
 
+        //public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+        //{
+        //    var user = await _repository.getE(id, cancellationToken);
+        //    if (user != null)
+        //    {
+        //        user.Roles = (await userRepository.GetUserRolesAsync(id, cancellationToken)).ToList();
+        //    }
+        //    return user;
+        //}
         public async Task<User?> GetCurrentUser(CancellationToken cancellationToken = default)
         {
             return await _currentUserService.GetCurrentUserAsync(cancellationToken);

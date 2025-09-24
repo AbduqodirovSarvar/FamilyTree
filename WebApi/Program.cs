@@ -4,6 +4,6 @@ builder.Services.AdApiDepencies(builder.Configuration);
 
 var app = builder.Build();
 
-app.AddWebAppExtention();
+await app.AddWebAppExtention();
 
-app.Run();
+await app.RunAsync();

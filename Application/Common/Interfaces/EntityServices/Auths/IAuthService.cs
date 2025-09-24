@@ -13,9 +13,10 @@ namespace Application.Common.Interfaces.EntityServices.Auths
     public interface IAuthService
     {
         Task<TokenViewModel> SignInAsync(SignInDto signInDto, CancellationToken cancellationToken);
-        Task<SignUpViewModel> SignUpAsync(SignUpDto signUpDto, CancellationToken cancellationToken);
+        Task<bool> SignUpAsync(SignUpDto signUpDto, CancellationToken cancellationToken);
         Task<bool> ResetAsync(ResetSignInDto resetSignInDto, CancellationToken cancellationToken);
-        Task<SignInViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+        Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
         Task<bool> SignOutAsync(string token, CancellationToken cancellationToken);
+        Task<bool> SendEmailAsync(string email, CancellationToken cancellationToken);
     }
 }

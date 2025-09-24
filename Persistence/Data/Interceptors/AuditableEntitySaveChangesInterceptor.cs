@@ -21,7 +21,7 @@ namespace Persistence.Data.Interceptors
         }
         public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
         {
-            UpdateEntities(eventData.Context); // ← shu yerda chaqiriladi
+            UpdateEntities(eventData.Context);
             return base.SavingChanges(eventData, result);
         }
 
@@ -30,7 +30,7 @@ namespace Persistence.Data.Interceptors
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
-            UpdateEntities(eventData.Context); // ← shu yerda chaqiriladi
+            UpdateEntities(eventData.Context);
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 

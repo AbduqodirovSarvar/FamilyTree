@@ -6,6 +6,7 @@ using Application.Common.Models.ViewModels;
 using Application.Services.EntityServices.Common;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,5 +21,19 @@ namespace Application.Services.EntityServices
         IMapper mapper)
         : GenericEntityService<UserRole, CreateUserRoleDto, UpdateUserRoleDto, UserRoleViewModel>(userRoleRepository, permissionService, mapper), IUserRoleService
     {
+        public override async Task<UserRoleViewModel> UpdateAsync(UpdateUserRoleDto entityUpdateDto, CancellationToken cancellationToken = default)
+        {
+            string entityTypeName = typeof(UserRole).Name;
+            if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
+                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+
+            var entity = _mapper.Map<UserRole>(entityUpdateDto);
+
+            var result = await _repository.UpdateAsync(entity, cancellationToken)
+                                ?? throw new InvalidOperationException("Failed to update entity.");
+
+            return _mapper.Map<UserRoleViewModel>(result);
+
+        }
     }
 }

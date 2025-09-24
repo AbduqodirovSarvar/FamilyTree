@@ -18,6 +18,6 @@ namespace Application.Common.Models.ViewModels
         public Guid? FamilyId { get; init; }
         public FamilyViewModel? Family { get; init; }
 
-        public ICollection<Permission> Permissions { get; init; } = [];
+        public ICollection<EnumViewModel> Permissions { get; init; } = [];
     }
 }

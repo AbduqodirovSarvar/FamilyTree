@@ -14,8 +14,6 @@ namespace Application.Common.Models.Dtos.Family
         public string Name { get; init; } = null!;
         [Required]
         public string FamilyName { get; init; } = null!;
-        [Required]
-        public Guid OwnerId { get; init; }
         public string? Description { get; init; } = null;
         public Guid? ImageId { get; init; } = null;
     }

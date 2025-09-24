@@ -57,7 +57,6 @@ namespace Application.Services.EntityServices.Common
                                 ?? throw new InvalidOperationException("Failed to update entity.");
 
             return _mapper.Map<TEntityViewModel>(result);
-
         }
 
         public virtual async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)

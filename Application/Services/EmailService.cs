@@ -11,7 +11,7 @@ namespace Application.Services
 {
     public class EmailService : IEmailService
     {
-        public async Task SendEmailAsync(string email, string subject, string body)
+        public async Task<bool> SendEmailAsync(string email, string subject, string body)
         {
             var model = new
             {
@@ -47,6 +47,7 @@ namespace Application.Services
                 Console.WriteLine($"Error sending email: {ex.Message}");
                 throw new Exception(ex.Message);
             }
+            return true;
         }
     }
 }

@@ -13,6 +13,6 @@ namespace Application.Common.Models.ViewModels
     {
         public Guid UserRoleId { get; init; }
         public UserRoleViewModel? UserRole { get; init; }
-        public Permission Permission { get; init; } = Permission.GET_FAMILY;
+        public EnumViewModel? Permission { get; init; }
     }
 }

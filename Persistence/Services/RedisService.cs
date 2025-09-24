@@ -1,32 +1,41 @@
 ﻿using Application.Common.Interfaces;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Persistence.Services
 {
-    public class RedisService : IRedisService
+    public class RedisService(IConnectionMultiplexer connectionMultiplexer) : IRedisService
     {
-        public Task<bool> ExistsAsync(string key)
+        private readonly IDatabase _database = connectionMultiplexer.GetDatabase();
+
+        public async Task<bool> ExistsAsync(string key)
         {
-            return Task.FromResult(false);
+            return await _database.KeyExistsAsync(key);
         }
 
-        public Task<T?> GetAsync<T>(string key)
+        public async Task<T?> GetAsync<T>(string key)
         {
-            return Task.FromResult<T?>(default);
+            var value = await _database.StringGetAsync(key);
+            if (value.IsNullOrEmpty)
+                return default;
+
+            return JsonSerializer.Deserialize<T>(value!);
         }
 
-        public Task<bool> RemoveAsync(string key)
+        public async Task<bool> RemoveAsync(string key)
         {
-            return Task.FromResult(false);
+            return await _database.KeyDeleteAsync(key);
         }
 
-        public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
+        public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
         {
-            return Task.CompletedTask;
+            var json = JsonSerializer.Serialize(value);
+            await _database.StringSetAsync(key, json, expiration);
         }
     }
 }

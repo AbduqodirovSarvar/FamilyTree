@@ -5,6 +5,7 @@ using Application.Common.Interfaces.EntityServices.Common;
 using Application.Common.Interfaces.Repositories.Common;
 using Application.Common.Mappings;
 using Application.Common.Models.ViewModels;
+using Application.Features.Family.Commands.Create;
 using Application.Services;
 using Application.Services.EntityServices;
 using Application.Services.EntityServices.Auths;
@@ -46,6 +47,14 @@ namespace Application.Extentions
             {
                 x.CreateMap<User, UserViewModel>().ReverseMap();
                 x.CreateMap<Family, FamilyViewModel>().ReverseMap();
+                x.CreateMap<Member, MemberViewModel>().ReverseMap();
+                x.CreateMap<UploadedFile, UploadedFileViewModel>().ReverseMap();
+                x.CreateMap<UserRole, UserRoleViewModel>().ReverseMap();
+                x.CreateMap<UserRolePermission, UserRolePermissionViewModel>().ReverseMap();
+                x.CreateMap<Enum, EnumViewModel>()
+                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Convert.ToInt32(src)))
+                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.ToString()));
+                x.CreateMap<CreateFamilyCommand, Family>().ReverseMap();
             });
         }
     }
