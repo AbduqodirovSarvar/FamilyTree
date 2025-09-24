@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Auth.Commands.SignIn
 {
-    public record SignInCommand : SignInDto, IRequest<Response<SignInViewModel>>
+    public record SignInCommand : SignInDto, IRequest<Response<TokenViewModel>>
     {
     }
 }

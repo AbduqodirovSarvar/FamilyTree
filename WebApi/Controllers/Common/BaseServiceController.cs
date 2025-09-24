@@ -1,12 +1,14 @@
 ﻿using Application.Common.Models.Dtos.Common;
 using Application.Common.Models.Request;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers.Common
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public abstract class BaseServiceController<TCreateCommand, TUpdateCommand, TDeleteCommand, TGetQuery, TGetAllQuery>(IMediator mediator)
         : BaseController(mediator)
         where TCreateCommand : BaseCreateDto
@@ -15,6 +17,7 @@ namespace WebApi.Controllers.Common
         where TGetQuery : BaseGetOneQuery
         where TGetAllQuery : BaseGetListQuery
     {
+        [HttpPost]
         public virtual async Task<IActionResult> Post([FromForm] TCreateCommand command)
         {
             if (command == null)

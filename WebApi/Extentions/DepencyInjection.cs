@@ -55,6 +55,13 @@ namespace WebApi.Extentions
                 });
             });
 
+            services.AddCors(o => o.AddPolicy("AddCors", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
+
             return services;
         }
     }

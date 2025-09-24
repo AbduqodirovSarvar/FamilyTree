@@ -18,9 +18,9 @@ namespace Application.Features.User.Queries.GetOne
         public async Task<Response<UserViewModel>> Handle(GetUserQuery request, CancellationToken cancellationToken)
         {
             UserViewModel? result = null;
-            if (request.Id.HasValue && request.Id != Guid.Empty)
+            if ( request.Id != Guid.Empty)
             {
-                result = await _userService.GetByIdAsync(request.Id.Value, cancellationToken)
+                result = await _userService.GetByIdAsync(request.Id, cancellationToken)
                              ?? throw new KeyNotFoundException("User not found.");
                 return Response<UserViewModel>.Ok(result);
             }

@@ -37,7 +37,8 @@ namespace Persistence.Services
             return new TokenViewModel
             {
                 AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = string.Empty
+                RefreshToken = string.Empty,
+                UserId = userClaims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty,
             };
         }
 

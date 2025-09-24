@@ -21,7 +21,7 @@ namespace Domain.Entities
         public string Email { get; set; } = "youremail@gmail.com";
         public string PasswordHash { get; set; } = null!;
 
-        public Guid FamilyId { get; set; }
+        public Guid? FamilyId { get; set; }
         public Family? Family { get; set; }
 
         public Guid RoleId { get; set; }

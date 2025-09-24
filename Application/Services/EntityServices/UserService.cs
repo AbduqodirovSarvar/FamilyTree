@@ -25,22 +25,7 @@ namespace Application.Services.EntityServices
 
         public async Task<User?> GetCurrentUser(CancellationToken cancellationToken = default)
         {
-            if (_currentUserService.UserId != null)
-            {
-                return await _repository.GetAsync(x => x.Id == _currentUserService.UserId, cancellationToken);
-            }
-
-            if (!string.IsNullOrWhiteSpace(_currentUserService.Email))
-            {
-                return await _repository.GetAsync(x => x.Email == _currentUserService.Email, cancellationToken);
-            }
-
-            if (!string.IsNullOrWhiteSpace(_currentUserService.Username))
-            {
-                return await _repository.GetAsync(x => x.UserName == _currentUserService.Username, cancellationToken);
-            }
-
-            return null;
+            return await _currentUserService.GetCurrentUserAsync(cancellationToken);
         }
     }
 }

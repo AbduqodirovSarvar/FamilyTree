@@ -2,6 +2,7 @@
 using Application.Features.Auth.Commands.SignIn;
 using Application.Features.Auth.Commands.SignUp;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers.Common;
 
@@ -11,6 +12,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class AuthController(IMediator mediator) : BaseController(mediator)
     {
+        [AllowAnonymous]
         [HttpPost("sign-in")]
         public async Task<IActionResult> SignIn([FromBody] SignInCommand command)
         {
@@ -20,6 +22,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("sign-up")]
         public async Task<IActionResult> SignUp([FromBody] SignUpCommand command)
         {
@@ -29,6 +32,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("reset")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetSignInCommand command)
         {

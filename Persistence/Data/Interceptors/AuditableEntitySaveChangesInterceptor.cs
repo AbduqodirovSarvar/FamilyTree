@@ -2,6 +2,7 @@
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,17 @@ using System.Threading.Tasks;
 
 namespace Persistence.Data.Interceptors
 {
-    public class AuditableEntitySaveChangesInterceptor(ICurrentUserService currentUserService) : SaveChangesInterceptor
+    public class AuditableEntitySaveChangesInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
     {
-        private readonly ICurrentUserService _currentUserService = currentUserService;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
 
+        private ICurrentUserService? GetCurrentUserService()
+        {
+            return _serviceProvider.GetService<ICurrentUserService>();
+        }
         public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
         {
-            UpdateEntities(eventData.Context);
+            UpdateEntities(eventData.Context); // ← shu yerda chaqiriladi
             return base.SavingChanges(eventData, result);
         }
 
@@ -25,24 +30,28 @@ namespace Persistence.Data.Interceptors
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
-            UpdateEntities(eventData.Context);
+            UpdateEntities(eventData.Context); // ← shu yerda chaqiriladi
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
+
 
         private void UpdateEntities(DbContext? context)
         {
             if (context == null) return;
+            var currentUserService = GetCurrentUserService();
 
             foreach (var entry in context.ChangeTracker.Entries<AudiTableEntity>())
             {
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = DateTime.UtcNow;
-                    entry.Entity.CreatedBy = _currentUserService.UserId;
+                    if (currentUserService != null)
+                        entry.Entity.CreatedBy ??= currentUserService.UserId;
                 }
                 else if (entry.State == EntityState.Modified)
                 {
-                    entry.Entity.UpdatedBy = _currentUserService.UserId;
+                    if (currentUserService != null)
+                        entry.Entity.UpdatedBy ??= currentUserService?.UserId;
                     entry.Entity.UpdatedAt = DateTime.UtcNow;
                 }
             }

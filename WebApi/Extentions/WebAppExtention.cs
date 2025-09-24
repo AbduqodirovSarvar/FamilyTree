@@ -9,6 +9,8 @@ namespace WebApi.Extentions
     {
         public static WebApplication AddWebAppExtention(this WebApplication app)
         {
+            app.UpdateMigration();
+            app.Seed();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -18,34 +20,27 @@ namespace WebApi.Extentions
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseCors("AddCors");
             app.MapControllers();
-
-
-            //app.UpdateMigration();
-            //app.Seed();
 
             return app;
         }
 
         private static void UpdateMigration(this WebApplication app)
         {
-            Console.WriteLine("Update MIgration boshlanmoqda...");
             using var scope = app.Services.CreateScope();
-            Console.WriteLine("SCOPE...");
             try
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                Console.WriteLine("DBCONTEXT...");
                 dbContext.Database.Migrate();
-                Console.WriteLine("MIGRATE...");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("❌ Migrationda xato: " + ex.Message);
+                Console.WriteLine("❌ Migrationda xato: " + ex);
                 throw;
             }
         }
+
 
         private static void Seed(this WebApplication app)
         {

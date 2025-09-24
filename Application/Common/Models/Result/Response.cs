@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace Application.Common.Models.Result
     public class Response<TEntity>
     {
         public bool Success { get; set; }
+        public HttpStatusCode? StatusCode { get; set; } = HttpStatusCode.OK;
         public string? Message { get; set; }
         public List<string>? Errors { get; set; }
         public TEntity? Data { get; set; } = default;
@@ -34,12 +36,13 @@ namespace Application.Common.Models.Result
                 TotalCount = totalCount
             };
 
-        public static Response<TEntity> Fail(string message, List<string>? errors = null)
+        public static Response<TEntity> Fail(string message, List<string>? errors = null, HttpStatusCode? statusCode = null)
             => new()
             {
                 Success = false,
                 Message = message,
-                Errors = errors
+                Errors = errors,
+                StatusCode = statusCode ?? HttpStatusCode.BadRequest
             };
     }
 }

@@ -4,6 +4,7 @@ using Application.Features.User.Commands.Update;
 using Application.Features.User.Queries.GetList;
 using Application.Features.User.Queries.GetOne;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers.Common;
 
@@ -11,6 +12,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class UserController(IMediator mediator) 
         : BaseServiceController<
                     BaseCreateDto,

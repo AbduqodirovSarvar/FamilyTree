@@ -40,10 +40,8 @@ namespace Persistence.Extentions
             services.AddDbContext<AppDbContext>((serviceProvider, options) =>
             {
                 var interceptor = serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>();
-
-                options.UseNpgsql(configuration.GetConnectionString("PostgreSqlConnection"));
-
-                options.AddInterceptors(interceptor);
+                options.UseNpgsql(configuration.GetConnectionString("PostgreSqlConnection"))
+                       .AddInterceptors(interceptor);
             });
 
             services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfiguration"));

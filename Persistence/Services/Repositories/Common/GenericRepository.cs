@@ -59,7 +59,9 @@ namespace Persistence.Services.Repositories.Common
         public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var result = await _redisService.GetAsync<TEntity>(id.ToString());
-            return result ?? await _dbSet.FindAsync([id], cancellationToken);
+            if (result != null)
+                return result;
+            return await _dbSet.FindAsync([id], cancellationToken);
         }
 
         public virtual async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)

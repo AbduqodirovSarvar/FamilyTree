@@ -19,6 +19,7 @@ namespace Persistence.Services
         private readonly ICurrentUserService _currentUserService = currentUserService;
         public async Task<bool> CheckPermission(string entityName, OperationType operation, User? user = null)
         {
+            //return Task.FromResult(true).Result;
             user ??= await _currentUserService.GetCurrentUserAsync()
                         ?? throw new UnauthorizedAccessException("User not found");
 

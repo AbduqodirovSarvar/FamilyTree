@@ -12,15 +12,15 @@ namespace Application.Features.Auth.Commands.SignUp
 {
     public class SignUpCommandHandler(
         IAuthService authService
-        ) : IRequestHandler<SignUpCommand, Response<SignUpViewModel>>
+        ) : IRequestHandler<SignUpCommand, Response<bool>>
     {
         private readonly IAuthService _authService = authService;
-        public async Task<Response<SignUpViewModel>> Handle(SignUpCommand request, CancellationToken cancellationToken)
+        public async Task<Response<bool>> Handle(SignUpCommand request, CancellationToken cancellationToken)
         {
             var result  = await _authService.SignUpAsync(request, cancellationToken)
                                   ?? throw new InvalidOperationException("Sign up failed.");
 
-            return Response<SignUpViewModel>.Ok(result, "Sign up successful.");
+            return Response<bool>.Ok(result != null, "Sign up successful.");
         }
     }
 }

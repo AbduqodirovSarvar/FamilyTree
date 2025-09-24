@@ -22,7 +22,8 @@ namespace Persistence.Data.Configuration
             builder.HasOne(u => u.Family)
             .WithMany(f => f.Users)
             .HasForeignKey(u => u.FamilyId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
-                }
+        }
     }
 }

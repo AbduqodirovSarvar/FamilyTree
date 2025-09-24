@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Auth.Commands.SignUp
 {
-    public record SignUpCommand : SignUpDto, IRequest<Response<SignUpViewModel>>
+    public record SignUpCommand : SignUpDto, IRequest<Response<bool>>
     {
+
     }
 }

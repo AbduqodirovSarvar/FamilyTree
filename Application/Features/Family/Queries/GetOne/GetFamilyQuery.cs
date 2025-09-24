@@ -12,7 +12,7 @@ namespace Application.Features.Family.Queries.GetOne
 {
     public record GetFamilyQuery : BaseGetOneQuery, IRequest<Response<FamilyViewModel>>
     {
-        public new Guid? Id { get; init; }
+        //public new Guid? Id { get; init; }
         public string? FamilyName { get; set; } = null;
     }
 }

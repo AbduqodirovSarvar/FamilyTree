@@ -19,9 +19,9 @@ namespace Application.Features.Family.Queries.GetOne
         public async Task<Response<FamilyViewModel>> Handle(GetFamilyQuery request, CancellationToken cancellationToken)
         {
             FamilyViewModel? result = null;
-            if (request.Id.HasValue && request.Id != Guid.Empty)
+            if (request.Id != Guid.Empty)
             {
-                result = await _familyService.GetByIdAsync(request.Id.Value, cancellationToken)
+                result = await _familyService.GetByIdAsync(request.Id, cancellationToken)
                              ?? throw new KeyNotFoundException("Family not found.");
                 return Response<FamilyViewModel>.Ok(result);
             }

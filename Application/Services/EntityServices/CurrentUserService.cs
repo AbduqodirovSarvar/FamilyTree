@@ -26,7 +26,10 @@ namespace Application.Services.EntityServices
             IUserRepository userRepository
             )
         {
+            _userRepository = userRepository;
             var httpContext = contextAccessor.HttpContext;
+            if (httpContext == null)
+                return;
             var userClaims = httpContext?.User.Claims;
 
             if (userClaims != null)
@@ -44,10 +47,7 @@ namespace Application.Services.EntityServices
                 Username = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
                 Role = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
             }
-
-            _userRepository = userRepository;
         }
-
 
         public async Task<User?> GetCurrentUserAsync(CancellationToken cancellationToken = default)
         {
