@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Application.Common.Models.ViewModels;
+using Domain.Entities;
+using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +11,7 @@ namespace Application.Common.Interfaces
 {
     public interface IFileService
     {
-        Task<string> SaveFileAsync(byte[] fileBytes, string fileName);
+        Task<UploadedFile> SaveFileAsync(IFormFile fileBytes, string fileName);
         Task<byte[]?> GetFileAsync(string fileName);
         Task DeleteFileAsync(string fileName);
     }

@@ -1,4 +1,5 @@
 ﻿using Application.Common.Models.Dtos.Common;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,6 +16,6 @@ namespace Application.Common.Models.Dtos.Family
         [Required]
         public string FamilyName { get; init; } = null!;
         public string? Description { get; init; } = null;
-        public Guid? ImageId { get; init; } = null;
+        public IFormFile? Image { get; init; } = null;
     }
 }

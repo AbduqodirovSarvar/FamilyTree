@@ -1,11 +1,15 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
+using Application.Common.Models.Dtos.Member;
 using Application.Common.Models.Dtos.User;
 using Application.Common.Models.ViewModels;
+using Application.Features.UploadedFile.Commands.Create;
 using Application.Services.EntityServices.Common;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,23 +22,58 @@ namespace Application.Services.EntityServices
         IUserRepository userRepository,
         ICurrentUserService currentUserService,
         IPermissionService permissionService,
+        IMediator mediator,
         IMapper mapper)
         : GenericEntityService<User, CreateUserDto, UpdateUserDto, UserViewModel>(userRepository, permissionService, mapper), IUserService
     {
         private readonly ICurrentUserService _currentUserService = currentUserService;
-
-        //public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
-        //{
-        //    var user = await _repository.getE(id, cancellationToken);
-        //    if (user != null)
-        //    {
-        //        user.Roles = (await userRepository.GetUserRolesAsync(id, cancellationToken)).ToList();
-        //    }
-        //    return user;
-        //}
+        private readonly IMediator _mediator = mediator;
         public async Task<User?> GetCurrentUser(CancellationToken cancellationToken = default)
         {
             return await _currentUserService.GetCurrentUserAsync(cancellationToken);
+        }
+        public override async Task<UserViewModel> CreateAsync(CreateUserDto entityCreateDto, CancellationToken cancellationToken = default)
+        {
+            string entityTypeName = typeof(Family).Name;
+            if (!await _permissionService.CheckPermission(entityTypeName, OperationType.CREATE, null))
+                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+
+            var entity = _mapper.Map<User>(entityCreateDto);
+
+            if (entityCreateDto.Image != null)
+            {
+                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = entityCreateDto.Image, Alt = entity.FirstName, Description = null }, cancellationToken)
+                                ?? throw new InvalidOperationException("Couldn't save the file!");
+                if (image.Data != null)
+                    entity.ImageId = image.Data.Id;
+            }
+
+            var result = await _repository.CreateAsync(entity, cancellationToken)
+                                ?? throw new InvalidOperationException("Failed to create entity.");
+
+            return _mapper.Map<UserViewModel>(result);
+        }
+
+        public override async Task<UserViewModel> UpdateAsync(UpdateUserDto entityUpdateDto, CancellationToken cancellationToken = default)
+        {
+            string entityTypeName = typeof(Family).Name;
+            if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
+                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+
+            var entity = _mapper.Map<User>(entityUpdateDto);
+
+            if (entityUpdateDto.Image != null)
+            {
+                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = entityUpdateDto.Image, Alt = entity.FirstName, Description = null }, cancellationToken)
+                                ?? throw new InvalidOperationException("Couldn't save the file!");
+                if (image.Data != null)
+                    entity.ImageId = image.Data.Id;
+            }
+
+            var result = await _repository.UpdateAsync(entity, cancellationToken)
+                                ?? throw new InvalidOperationException("Failed to update entity.");
+
+            return _mapper.Map<UserViewModel>(result);
         }
     }
 }

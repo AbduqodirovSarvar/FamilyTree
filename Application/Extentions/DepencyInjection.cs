@@ -42,20 +42,12 @@ namespace Application.Extentions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddSingleton<IFileService, FileService>();
-
-            services.AddAutoMapper(x =>
+            services.AddAutoMapper(cfg =>
             {
-                x.CreateMap<User, UserViewModel>().ReverseMap();
-                x.CreateMap<Family, FamilyViewModel>().ReverseMap();
-                x.CreateMap<Member, MemberViewModel>().ReverseMap();
-                x.CreateMap<UploadedFile, UploadedFileViewModel>().ReverseMap();
-                x.CreateMap<UserRole, UserRoleViewModel>().ReverseMap();
-                x.CreateMap<UserRolePermission, UserRolePermissionViewModel>().ReverseMap();
-                x.CreateMap<Enum, EnumViewModel>()
-                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Convert.ToInt32(src)))
-                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.ToString()));
-                x.CreateMap<CreateFamilyCommand, Family>().ReverseMap();
+                cfg.AddMaps(typeof(AssemblyMarker).Assembly);
             });
+
+
         }
     }
 }

@@ -14,12 +14,10 @@ using System.Threading.Tasks;
 namespace Application.Features.User.Queries.GetList
 {
     public class GetUserListQUeryHandler(
-        IUserService userService,
-        IMapper mapper
+        IUserService userService
         ) : IRequestHandler<GetUserListQuery, Response<List<UserViewModel>>>
     {
         private readonly IUserService _userService = userService;
-        private readonly IMapper _mapper = mapper;
         public async Task<Response<List<UserViewModel>>> Handle(GetUserListQuery request, CancellationToken cancellationToken)
         {
             Expression<Func<Domain.Entities.User, bool>>? predicate = null;

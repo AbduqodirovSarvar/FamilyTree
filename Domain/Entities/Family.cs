@@ -18,7 +18,7 @@ namespace Domain.Entities
         public Guid? ImageId { get; set; }
         public UploadedFile? Image { get; set; }
 
-        public Guid? OwnerId { get; set; }
+        public Guid OwnerId { get; set; }
         public User? Owner { get; set; }
         public ICollection<User> Users { get; set; } = [];
         public ICollection<Member> Members { get; set; } = [];

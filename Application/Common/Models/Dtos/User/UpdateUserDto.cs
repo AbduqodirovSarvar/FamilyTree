@@ -1,4 +1,5 @@
 ﻿using Application.Common.Models.Dtos.Common;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,6 +17,7 @@ namespace Application.Common.Models.Dtos.User
         public string? Phone { get; init; } = null;
         public string? Email { get; init; } = null;
         public Guid? FamilyId { get; init; } = null;
+        public IFormFile? Image { get; init; } = null;
         public Guid? RoleId { get; init; } = null;
         public ChangeUserPasswordDto? Password { get; init; } = null;
     }

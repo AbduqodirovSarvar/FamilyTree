@@ -1,5 +1,6 @@
 ﻿using Application.Common.Models.Dtos.Common;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Application.Common.Models.Dtos.Member
         public DateOnly? DeathDay { get; init; } = null;
         public Gender? Gender { get; init; } = null;
         public Guid? FamilyId { get; init; } = null;
-        public Guid? ImageId { get; init; } = null;
+        public IFormFile? Image { get; init; } = null;
         public Guid? FatherId { get; init; } = null;
         public Guid? MotherId { get; init; } = null;
         public Guid? SpouseId { get; init; } = null;

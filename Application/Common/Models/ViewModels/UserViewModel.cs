@@ -22,6 +22,9 @@ namespace Application.Common.Models.ViewModels
         public Guid FamilyId { get; init; }
         public FamilyViewModel? Family { get; init; }
 
+        public Guid? ImageId { get; set; }
+        public UploadedFileViewModel? Image { get; set; }
+
         public Guid RoleId { get; init; }
         public UserRoleViewModel? Role { get; init; }
     }
