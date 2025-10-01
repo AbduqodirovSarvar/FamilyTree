@@ -19,7 +19,7 @@ namespace Persistence.Data.DefaultData
             UserName = "admin",
             Email = "admin@familytree.uz",
             Phone = "+998901234567",
-            RoleId = DefaultUserRole.Instance.Id
+            RoleId = DefaultUserRole.Instance[0].Id
         };
 
         private DefaultUser() { }

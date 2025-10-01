@@ -2,23 +2,11 @@
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.EntityServices.Auths;
 using Application.Common.Interfaces.EntityServices.Common;
-using Application.Common.Interfaces.Repositories.Common;
 using Application.Common.Mappings;
-using Application.Common.Models.ViewModels;
-using Application.Features.Family.Commands.Create;
-using Application.Services;
 using Application.Services.EntityServices;
 using Application.Services.EntityServices.Auths;
 using Application.Services.EntityServices.Common;
-using AutoMapper;
-using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Extentions
 {
@@ -39,15 +27,11 @@ namespace Application.Extentions
             services.AddScoped<IUploadedFileService, UploadedFileService>();
             services.AddScoped<IUserRolePermissionService, UserRolePermissionService>();
             services.AddScoped<IUserRoleService, UserRoleService>();
-            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddSingleton<IFileService, FileService>();
             services.AddAutoMapper(cfg =>
             {
                 cfg.AddMaps(typeof(AssemblyMarker).Assembly);
             });
-
-
         }
     }
 }

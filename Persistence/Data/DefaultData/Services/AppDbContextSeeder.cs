@@ -15,7 +15,7 @@ namespace Persistence.Data.DefaultData.Services
             if (!await context.UserRoles.AnyAsync())
             {
                 var adminRole = DefaultUserRole.Instance;
-                await context.UserRoles.AddAsync(adminRole);
+                await context.UserRoles.AddRangeAsync(adminRole);
             }
 
             if(!await context.UserRolePermissions.AnyAsync())
@@ -39,7 +39,7 @@ namespace Persistence.Data.DefaultData.Services
             if (!context.UserRoles.Any())
             {
                 var adminRole = DefaultUserRole.Instance;
-                context.UserRoles.Add(adminRole);
+                context.UserRoles.AddRange(adminRole);
             }
 
             if (!context.UserRolePermissions.Any())

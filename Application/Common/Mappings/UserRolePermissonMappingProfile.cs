@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.ViewModels;
+﻿using Application.Common.Models.Dtos.UserRolePermission;
+using Application.Common.Models.ViewModels;
 using Application.Features.UserRolePermission.Commands.Create;
 using Application.Features.UserRolePermission.Commands.Update;
 using AutoMapper;
@@ -16,8 +17,8 @@ namespace Application.Common.Mappings
         public UserRolePermissonMappingProfile()
         {
             CreateMap<UserRolePermission, UserRolePermissionViewModel>().ReverseMap();
-            CreateMap<CreateUserRolePermissionCommand, UserRolePermission>().ReverseMap();
-            CreateMap<UpdateUserRolePermissionCommand, UserRolePermission>()
+            CreateMap<CreateUserRolePermissionDto, UserRolePermission>().ReverseMap();
+            CreateMap<UpdateUserRolePermissionDto, UserRolePermission>()
                 .ForMember(urp => urp.UserRoleId, opt => opt.Condition(urpc => urpc.UserRoleId != null))
                 .ForMember(urp => urp.Permission, opt => opt.Condition(urpc => urpc.Permission != null));
         }

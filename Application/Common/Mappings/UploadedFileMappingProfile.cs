@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.ViewModels;
+﻿using Application.Common.Models.Dtos.UploadedFile;
+using Application.Common.Models.ViewModels;
 using Application.Features.UploadedFile.Commands.Update;
 using AutoMapper;
 using Domain.Entities;
@@ -15,7 +16,7 @@ namespace Application.Common.Mappings
         public UploadedFileMappingProfile()
         {
             CreateMap<UploadedFile, UploadedFileViewModel>().ReverseMap();
-            CreateMap<UpdateUploadedFileCommand, UploadedFile>()
+            CreateMap<UpdateUploadedFileDto, UploadedFile>()
                 .ForMember(uf => uf.Description, opt => opt.MapFrom(ufc => ufc.Description))
                 .ForMember(uf => uf.Alt, opt => opt.MapFrom(ufc => ufc.Alt));
         }

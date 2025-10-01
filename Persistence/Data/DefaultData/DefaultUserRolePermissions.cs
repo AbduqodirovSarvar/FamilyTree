@@ -16,7 +16,7 @@ namespace Persistence.Data.DefaultData
             .Select(permission => new UserRolePermission
             {
                 Id = Guid.NewGuid(),
-                UserRoleId = DefaultUserRole.Instance.Id,
+                UserRoleId = DefaultUserRole.Instance[0].Id,
                 Permission = permission
             })];
 

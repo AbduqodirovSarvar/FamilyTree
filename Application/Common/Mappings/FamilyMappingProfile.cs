@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.ViewModels;
+﻿using Application.Common.Models.Dtos.Family;
+using Application.Common.Models.ViewModels;
 using Application.Features.Family.Commands.Create;
 using Application.Features.Family.Commands.Update;
 using AutoMapper;
@@ -15,13 +16,15 @@ namespace Application.Common.Mappings
     {
         public FamilyMappingProfile() {
             CreateMap<Family, FamilyViewModel>().ReverseMap();
-            CreateMap<CreateFamilyCommand, Family>()
-                .ForMember(f => f.ImageId, opt => opt.Ignore());
-            CreateMap<UpdateFamilyCommand, Family>()
+            CreateMap<CreateFamilyDto, Family>()
+                .ForMember(f => f.ImageId, opt => opt.Ignore())
+                .ForMember(x => x.Image, opt => opt.Ignore());
+            CreateMap<UpdateFamilyDto, Family>()
                 .ForMember(f => f.Name, opt => opt.Condition(ufc => ufc.Name != null))
                 .ForMember(f => f.Description, opt => opt.MapFrom(ufc => ufc.Description))
                 .ForMember(f => f.FamilyName, opt => opt.Condition(ufc => ufc.FamilyName != null))
                 .ForMember(f => f.ImageId, opt => opt.Ignore())
+                .ForMember(x => x.Image, opt => opt.Ignore())
                 .ForMember(f => f.OwnerId, opt => opt.Condition(ufc => ufc.OwnerId != null));
         }
     }

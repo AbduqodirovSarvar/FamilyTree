@@ -1,4 +1,5 @@
-﻿using Application.Common.Models.ViewModels;
+﻿using Application.Common.Models.Dtos.UserRole;
+using Application.Common.Models.ViewModels;
 using Application.Features.UserRole.Commands.Create;
 using Application.Features.UserRole.Commands.Update;
 using AutoMapper;
@@ -16,8 +17,8 @@ namespace Application.Common.Mappings
         public UserRoleMappingProfile()
         {
             CreateMap<UserRole, UserRoleViewModel>().ReverseMap();
-            CreateMap<CreateUserRoleCommand, UserRole>().ReverseMap();
-            CreateMap<UpdateUserRoleCommand, UserRole>()
+            CreateMap<CreateUserRoleDto, UserRole>().ReverseMap();
+            CreateMap<UpdateUserRoleDto, UserRole>()
                 .ForMember(ur => ur.Name, opt => opt.Condition(urc => urc.Name != null))
                 .ForMember(ur => ur.Description, opt => opt.MapFrom(urc => urc.Description))
                 .ForMember(ur => ur.DesignedName, opt => opt.MapFrom(urc => urc.DesignedName))

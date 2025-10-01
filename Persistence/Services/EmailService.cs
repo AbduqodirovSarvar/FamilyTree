@@ -7,7 +7,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Services
+namespace Persistence.Services
 {
     public class EmailService : IEmailService
     {
