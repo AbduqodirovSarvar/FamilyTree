@@ -11,16 +11,27 @@ using System.Threading.Tasks;
 
 namespace Persistence.Services
 {
-    public class FileService(IWebHostEnvironment env) : IFileService
+    public class FileService : IFileService
     {
-        private readonly IWebHostEnvironment _env = env;
+        private readonly string _webRootPath;
 
+        public FileService(string webRootPath)
+        {
+            _webRootPath = webRootPath ?? throw new ArgumentNullException(nameof(webRootPath));
+
+            if (!Directory.Exists(_webRootPath))
+                Directory.CreateDirectory(_webRootPath);
+
+            var uploadsPath = Path.Combine(_webRootPath, "uploads");
+            if (!Directory.Exists(uploadsPath))
+                Directory.CreateDirectory(uploadsPath);
+        }
         private string GetUploadPath()
         {
-            return Path.Combine(_env.WebRootPath, "uploads");
+            return Path.Combine(_webRootPath, "uploads");
         }
 
-        public async Task<UploadedFile> SaveFileAsync(IFormFile file, string fileName)
+        public async Task<UploadedFile> SaveFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File is empty");
@@ -30,7 +41,7 @@ namespace Persistence.Services
                 Directory.CreateDirectory(uploadPath);
 
             var extension = Path.GetExtension(file.FileName);
-            var uniqueName = $"{Guid.NewGuid()}_{fileName}{extension}";
+            var uniqueName = $"{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(uploadPath, uniqueName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))

@@ -1,6 +1,9 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces.Repositories;
 using Application.Common.Interfaces.Repositories.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -8,12 +11,10 @@ using Persistence.Data;
 using Persistence.Data.Interceptors;
 using Persistence.Models;
 using Persistence.Services;
-using StackExchange.Redis;
-using Microsoft.EntityFrameworkCore;
-using System.Text;
-using Persistence.Services.Repositories.Common;
-using Application.Common.Interfaces.Repositories;
 using Persistence.Services.Repositories;
+using Persistence.Services.Repositories.Common;
+using StackExchange.Redis;
+using System.Text;
 
 namespace Persistence.Extentions
 {
@@ -32,7 +33,17 @@ namespace Persistence.Extentions
             services.AddSingleton<IHashService, HashService>();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddScoped<IPermissionService, PermissionService>();
-            services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IFileService>(provider =>
+            {
+                var env = provider.GetRequiredService<IWebHostEnvironment>();
+                var webRootPath = env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+                if (!Directory.Exists(webRootPath))
+                    Directory.CreateDirectory(webRootPath);
+
+                return new FileService(webRootPath);
+            });
+
             services.AddScoped<IEmailService, EmailService>();
 
             services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis") ?? "localhost:6379"));

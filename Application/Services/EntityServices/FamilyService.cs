@@ -5,6 +5,7 @@ using Application.Common.Models.Dtos.Family;
 using Application.Common.Models.Dtos.UploadedFile;
 using Application.Common.Models.ViewModels;
 using Application.Features.UploadedFile.Commands.Create;
+using Application.Features.UploadedFile.Commands.Delete;
 using Application.Services.EntityServices.Common;
 using AutoMapper;
 using Domain.Entities;
@@ -74,6 +75,26 @@ namespace Application.Services.EntityServices
                                 ?? throw new InvalidOperationException("Failed to update entity.");
 
             return _mapper.Map<FamilyViewModel>(result);
+        }
+
+        public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            string entityTypeName = typeof(Family).Name;
+            if (!await _permissionService.CheckPermission(entityTypeName, OperationType.DELETE))
+                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+
+            var entity = await _repository.GetByIdAsync(id, cancellationToken)
+                                ?? throw new KeyNotFoundException("Entity not found");
+
+            if (entity.ImageId.HasValue && entity.ImageId.Value != Guid.Empty)
+            {
+                await _mediator.Send(new DeleteUploadedFileCommand()
+                {
+                    Id = entity.ImageId.Value
+                }, cancellationToken);
+            }
+
+            return await _repository.DeleteAsync(entity, cancellationToken);
         }
     }
 }

@@ -5,8 +5,12 @@ using Application.Common.Interfaces.Repositories;
 using Application.Common.Models.Dtos.Auth;
 using Application.Common.Models.Dtos.User;
 using Application.Common.Models.Result;
+using Application.Common.Models.ViewModels;
+using Application.Features.UploadedFile.Commands.Create;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +27,8 @@ namespace Application.Services.EntityServices.Auths
         IHashService hashService,
         IEmailService emailService,
         IRedisService redisService,
-        IMapper mapper
+        IMapper mapper,
+        IMediator mediator
         ) : IAuthService
     {
         private readonly IUserRepository _userRepository = userRepository;
@@ -33,6 +38,7 @@ namespace Application.Services.EntityServices.Auths
         private readonly IEmailService _emailService = emailService;
         private readonly IRedisService _redisService = redisService;
         private readonly IMapper _mapper = mapper;
+        private readonly IMediator _mediator = mediator;
 
         public Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
@@ -106,6 +112,14 @@ namespace Application.Services.EntityServices.Auths
             var user = _mapper.Map<User>(signUpDto);
 
             user.RoleId = userRole.Id;
+
+            if (signUpDto.Image != null)
+            {
+                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = signUpDto.Image, Alt = user.FirstName, Description = null }, cancellationToken)
+                                ?? throw new InvalidOperationException("Couldn't save the file!");
+                if (image.Data != null)
+                    user.ImageId = image.Data.Id;
+            }
 
             user.PasswordHash = _hashService.Hash(signUpDto.Password);
 

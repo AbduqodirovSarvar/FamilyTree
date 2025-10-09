@@ -1,20 +1,27 @@
-﻿using Persistence.Extentions;
+﻿using Application.Common.Interfaces;
 using Application.Extentions;
 using Microsoft.OpenApi.Models;
+using Persistence.Extentions;
+using Persistence.Services;
 
 namespace WebApi.Extentions
 {
     public static class DepencyInjection
     {
-        public static IServiceCollection AdApiDepencies(this IServiceCollection services, IConfiguration configuration)
+        public static void AdApiDepencies(this WebApplicationBuilder builder, IConfiguration configuration)
         {
-            services.AddHttpContextAccessor();
-            services.AddApplicationDepencies();
-            services.AddInfrastructureDepencies(configuration);
-            services.AddSwagger();
-            services.AddEndpointsApiExplorer();
-            services.AddControllers();
-            return services;
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddApplicationDepencies();
+            builder.Services.AddInfrastructureDepencies(configuration);
+            builder.Services.AddSwagger();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddControllers();
+            var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            if (!Directory.Exists(webRootPath))
+            {
+                Directory.CreateDirectory(webRootPath);
+            }
+            builder.Environment.WebRootPath = webRootPath;
         }
 
         private static IServiceCollection AddSwagger(this IServiceCollection services)

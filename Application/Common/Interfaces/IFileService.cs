@@ -11,7 +11,7 @@ namespace Application.Common.Interfaces
 {
     public interface IFileService
     {
-        Task<UploadedFile> SaveFileAsync(IFormFile fileBytes, string fileName);
+        Task<UploadedFile> SaveFileAsync(IFormFile fileBytes);
         Task<byte[]?> GetFileAsync(string fileName);
         Task DeleteFileAsync(string fileName);
     }

@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 namespace Application.Features.UploadedFile.Commands.Create
 {
     public class CreateUploadedFileCommandHandler(
-        IFileService fileService,
         IUploadedFileService uploadedFileService
         ) : IRequestHandler<CreateUploadedFileCommand, Response<UploadedFileViewModel>>
     {
-        private readonly IFileService _fileService = fileService;
         private readonly IUploadedFileService _uploadedFileService = uploadedFileService;
         public async Task<Response<UploadedFileViewModel>> Handle(CreateUploadedFileCommand request, CancellationToken cancellationToken)
         {
@@ -26,13 +24,6 @@ namespace Application.Features.UploadedFile.Commands.Create
             var result = await _uploadedFileService.CreateAsync(request, cancellationToken);
 
             return Response<UploadedFileViewModel>.Ok(result, "Uploaded file created successfully.");
-
-
-
-
-
-
-            throw new NotImplementedException();
         }
     }
 }

@@ -23,5 +23,16 @@ namespace WebApi.Controllers
         {
             throw new NotImplementedException("Uploaded file creation is not supported via this endpoint.");
         }
+
+        [HttpGet("file")]
+        public async Task<IActionResult> GetFile([FromQuery] Guid fileId)
+        {
+            var uploadedFile = await _mediator.Send(new GetUploadedFileQuery() { Id = fileId })
+                                ?? throw new FileNotFoundException();
+
+            byte[]? file = await _mediator.Send(new GetUploadedFileQuery { Id = fileId })
+                                ?? throw new FileNotFoundException();
+            return File(file, "application/octet-stream", $"file_{fileId}");
+        }
     }
 }
