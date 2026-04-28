@@ -59,13 +59,26 @@ namespace Application.Services.EntityServices
         {
             string entityTypeName = typeof(Family).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new UnauthorizedAccessException("You do not have permission to update this entity.");
 
-            var entity = _mapper.Map<Family>(entityUpdateDto);
+            // Load existing entity so we don't overwrite OwnerId / CreatedAt / etc with default values.
+            var entity = await _repository.GetByIdAsync(entityUpdateDto.Id, cancellationToken)
+                                ?? throw new KeyNotFoundException("Family not found");
+
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.Name)) entity.Name = entityUpdateDto.Name;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.FamilyName)) entity.FamilyName = entityUpdateDto.FamilyName;
+            if (entityUpdateDto.Description != null) entity.Description = entityUpdateDto.Description;
+            if (entityUpdateDto.OwnerId.HasValue && entityUpdateDto.OwnerId.Value != Guid.Empty)
+                entity.OwnerId = entityUpdateDto.OwnerId.Value;
 
             if (entityUpdateDto.Image != null)
             {
-                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = entityUpdateDto.Image, Alt = entity.Name, Description = entityUpdateDto.Description }, cancellationToken)
+                var image = await _mediator.Send(new CreateUploadedFileCommand
+                {
+                    File = entityUpdateDto.Image,
+                    Alt = entity.Name,
+                    Description = entityUpdateDto.Description
+                }, cancellationToken)
                                 ?? throw new InvalidOperationException("Couldn't save the file!");
                 if (image.Data != null)
                     entity.ImageId = image.Data.Id;

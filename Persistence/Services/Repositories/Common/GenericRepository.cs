@@ -56,7 +56,7 @@ namespace Persistence.Services.Repositories.Common
             return await _dbSet.AnyAsync(predicate, cancellationToken);
         }
 
-        public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var result = await _redisService.GetAsync<TEntity>(id.ToString());
             if (result != null)

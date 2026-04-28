@@ -53,13 +53,33 @@ namespace Application.Services.EntityServices
         {
             string entityTypeName = typeof(Member).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new UnauthorizedAccessException("You do not have permission to update this entity.");
 
-            var entity = _mapper.Map<Member>(entityUpdateDto);
+            // Load existing entity to preserve fields not present in the DTO.
+            var entity = await _repository.GetByIdAsync(entityUpdateDto.Id, cancellationToken)
+                            ?? throw new KeyNotFoundException("Member not found");
+
+            if (entityUpdateDto.FirstName != null) entity.FirstName = entityUpdateDto.FirstName;
+            if (entityUpdateDto.LastName != null) entity.LastName = entityUpdateDto.LastName;
+            if (entityUpdateDto.Description != null) entity.Description = entityUpdateDto.Description;
+            if (entityUpdateDto.BirthDay.HasValue) entity.BirthDay = entityUpdateDto.BirthDay.Value;
+            if (entityUpdateDto.DeathDay.HasValue) entity.DeathDay = entityUpdateDto.DeathDay;
+            if (entityUpdateDto.Gender.HasValue) entity.Gender = entityUpdateDto.Gender.Value;
+            if (entityUpdateDto.FamilyId.HasValue && entityUpdateDto.FamilyId.Value != Guid.Empty)
+                entity.FamilyId = entityUpdateDto.FamilyId.Value;
+            // Father/Mother/Spouse are nullable — null clears the link, a Guid sets it.
+            entity.FatherId = entityUpdateDto.FatherId == Guid.Empty ? null : entityUpdateDto.FatherId ?? entity.FatherId;
+            entity.MotherId = entityUpdateDto.MotherId == Guid.Empty ? null : entityUpdateDto.MotherId ?? entity.MotherId;
+            entity.SpouseId = entityUpdateDto.SpouseId == Guid.Empty ? null : entityUpdateDto.SpouseId ?? entity.SpouseId;
 
             if (entityUpdateDto.Image != null)
             {
-                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = entityUpdateDto.Image, Alt = entity.FirstName, Description = entityUpdateDto.Description }, cancellationToken)
+                var image = await _mediator.Send(new CreateUploadedFileCommand
+                {
+                    File = entityUpdateDto.Image,
+                    Alt = entity.FirstName,
+                    Description = entityUpdateDto.Description
+                }, cancellationToken)
                                 ?? throw new InvalidOperationException("Couldn't save the file!");
                 if (image.Data != null)
                     entity.ImageId = image.Data.Id;
@@ -75,14 +95,29 @@ namespace Application.Services.EntityServices
         {
             string entityTypeName = typeof(Member).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.DELETE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new UnauthorizedAccessException("You do not have permission to delete this entity.");
 
             var entity = await _repository.GetByIdAsync(id, cancellationToken)
                                 ?? throw new KeyNotFoundException("Entity not found");
 
+            // Detach self-references from any other member that points at this one
+            // (FatherId / MotherId / SpouseId) so PostgreSQL doesn't reject the delete
+            // with FK_Members_Members_* constraint violations.
+            var referencing = await _repository.GetAllAsync(
+                m => m.FatherId == id || m.MotherId == id || m.SpouseId == id,
+                cancellationToken);
+
+            foreach (var m in referencing)
+            {
+                if (m.FatherId == id) m.FatherId = null;
+                if (m.MotherId == id) m.MotherId = null;
+                if (m.SpouseId == id) m.SpouseId = null;
+                await _repository.UpdateAsync(m, cancellationToken);
+            }
+
             if (entity.ImageId.HasValue && entity.ImageId.Value != Guid.Empty)
             {
-                await _mediator.Send(new DeleteUploadedFileCommand()
+                await _mediator.Send(new DeleteUploadedFileCommand
                 {
                     Id = entity.ImageId.Value
                 }, cancellationToken);

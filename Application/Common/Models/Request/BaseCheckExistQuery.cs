@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Common.Models.Dtos.Common
+namespace Application.Common.Models.Request
 {
-    public abstract record BaseCreateDto { }
+    public abstract record BaseCheckExistQuery { }
 }

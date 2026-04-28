@@ -16,6 +16,8 @@ namespace WebApi.Extentions
                 c.RoutePrefix = string.Empty;
             });
             app.UseHttpsRedirection();
+            // Serve files from wwwroot (e.g. /uploads/<guid>.png) so the SPA can render avatars.
+            app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors("AddCors");

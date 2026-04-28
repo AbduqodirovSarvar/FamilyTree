@@ -1,6 +1,7 @@
 ﻿using Application.Features.UserRole.Commands.Create;
 using Application.Features.UserRole.Commands.Delete;
 using Application.Features.UserRole.Commands.Update;
+using Application.Features.UserRole.Queries.CheckExist;
 using Application.Features.UserRole.Queries.GetList;
 using Application.Features.UserRole.Queries.GetOne;
 using MediatR;
@@ -11,13 +12,14 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserRoleController(IMediator mediator) 
+    public class UserRoleController(IMediator mediator)
         : BaseServiceController<
             CreateUserRoleCommand,
             UpdateUserRoleCommand,
             DeleteUserRoleCommand,
             GetUserRoleQuery,
-            GetUserRoleListQuery>(mediator)
+            GetUserRoleListQuery,
+            CheckUserRoleExistQuery>(mediator)
     {
     }
 }

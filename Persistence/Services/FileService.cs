@@ -49,11 +49,16 @@ namespace Persistence.Services
                 await file.CopyToAsync(stream);
             }
 
+            var relative = $"/uploads/{uniqueName}";
             return new UploadedFile
             {
                 Id = Guid.NewGuid(),
                 Name = uniqueName,
-                Path = $"/uploads/{uniqueName}",
+                Path = relative,
+                // Url shares the relative path; the GUID-based filename keeps it unique
+                // across files, so IX_UploadedFiles_Url is satisfied. Front-end can
+                // prepend the API base URL when rendering.
+                Url = relative,
                 Type = GetMimeType(extension),
                 Size = file.Length,
                 CreatedAt = DateTime.UtcNow

@@ -9,13 +9,14 @@ namespace WebApi.Controllers.Common
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public abstract class BaseServiceController<TCreateCommand, TUpdateCommand, TDeleteCommand, TGetQuery, TGetAllQuery>(IMediator mediator)
+    public abstract class BaseServiceController<TCreateCommand, TUpdateCommand, TDeleteCommand, TGetQuery, TGetAllQuery, TCheckExistQUery>(IMediator mediator)
         : BaseController(mediator)
         where TCreateCommand : BaseCreateDto
         where TUpdateCommand : BaseUpdateDto
         where TDeleteCommand : BaseDeleteDto
         where TGetQuery : BaseGetOneQuery
         where TGetAllQuery : BaseGetListQuery
+        where TCheckExistQUery : BaseCheckExistQuery
     {
         [HttpPost]
         public virtual async Task<IActionResult> Post([FromForm] TCreateCommand command)
@@ -60,6 +61,16 @@ namespace WebApi.Controllers.Common
         [HttpGet("list")]
         public virtual async Task<IActionResult> GetAll([FromQuery] TGetAllQuery request)
         {
+            var result = await _mediator.Send(request);
+            return Ok(result);
+        }
+
+        [HttpGet("any")]
+        public virtual async Task<IActionResult> Any([FromQuery] TCheckExistQUery request)
+        {
+            if (request == null)
+                return BadRequest("Request cannot be null");
+
             var result = await _mediator.Send(request);
             return Ok(result);
         }

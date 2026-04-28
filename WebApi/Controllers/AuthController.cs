@@ -1,7 +1,10 @@
-﻿using Application.Features.Auth.Commands.Confirmation;
+﻿using Application.Features.Auth.Commands.ChangePassword;
+using Application.Features.Auth.Commands.Confirmation;
 using Application.Features.Auth.Commands.Reset;
 using Application.Features.Auth.Commands.SignIn;
 using Application.Features.Auth.Commands.SignUp;
+using Application.Features.Auth.Commands.UpdateProfile;
+using Application.Features.Auth.Queries.GetMe;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +60,34 @@ namespace WebApi.Controllers
         public IActionResult RefreshToken()
         {
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            var result = await _mediator.Send(new GetMeQuery());
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UpdateProfileCommand command)
+        {
+            if (command == null)
+                return BadRequest("Request cannot be null");
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
+        {
+            if (command == null)
+                return BadRequest("Request cannot be null");
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Application.Common.Models.Dtos.Common;
 using Application.Features.UploadedFile.Commands.Delete;
 using Application.Features.UploadedFile.Commands.Update;
+using Application.Features.UploadedFile.Queries.CheckExist;
 using Application.Features.UploadedFile.Queries.GetLIst;
 using Application.Features.UploadedFile.Queries.GetOne;
 using MediatR;
@@ -11,13 +12,14 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UploadedFileController(IMediator mediator) 
+    public class UploadedFileController(IMediator mediator)
         : BaseServiceController<
             BaseCreateDto,
             UpdateUploadedFileCommand,
             DeleteUploadedFileCommand,
             GetUploadedFileQuery,
-            GetUploadedFileListQuery>(mediator)
+            GetUploadedFileListQuery,
+            CheckUploadedFileExistQuery>(mediator)
     {
         public override Task<IActionResult> Post([FromForm] BaseCreateDto command)
         {

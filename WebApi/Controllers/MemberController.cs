@@ -1,6 +1,7 @@
 ﻿using Application.Features.Member.Commands.Create;
 using Application.Features.Member.Commands.Delete;
 using Application.Features.Member.Commands.Update;
+using Application.Features.Member.Queries.CheckExist;
 using Application.Features.Member.Queries.GetList;
 using Application.Features.Member.Queries.GetOne;
 using MediatR;
@@ -11,13 +12,14 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MemberController(IMediator mediator) 
+    public class MemberController(IMediator mediator)
         : BaseServiceController<
             CreateMemberCommand,
             UpdateMemberCommand,
             DeleteMemberCommand,
             GetMemberQuery,
-            GetMemberListQuery>(mediator)
+            GetMemberListQuery,
+            CheckMemberExistQuery>(mediator)
     {
     }
 }

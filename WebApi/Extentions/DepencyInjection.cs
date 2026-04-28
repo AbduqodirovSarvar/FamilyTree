@@ -3,6 +3,7 @@ using Application.Extentions;
 using Microsoft.OpenApi.Models;
 using Persistence.Extentions;
 using Persistence.Services;
+using System.Text.Json.Serialization;
 
 namespace WebApi.Extentions
 {
@@ -15,7 +16,15 @@ namespace WebApi.Extentions
             builder.Services.AddInfrastructureDepencies(configuration);
             builder.Services.AddSwagger();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Domain entities (Member.Father/Children, Family.Members, etc.) form a navigation
+                    // graph that EF Core / AutoMapper can populate cyclically. Without this option
+                    // System.Text.Json hits MaxDepth and throws JsonException_SerializerCycleDetected.
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                });
             var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             if (!Directory.Exists(webRootPath))
             {

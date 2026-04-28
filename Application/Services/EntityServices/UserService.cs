@@ -57,15 +57,33 @@ namespace Application.Services.EntityServices
 
         public override async Task<UserViewModel> UpdateAsync(UpdateUserDto entityUpdateDto, CancellationToken cancellationToken = default)
         {
-            string entityTypeName = typeof(Family).Name;
+            string entityTypeName = typeof(User).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new UnauthorizedAccessException("You do not have permission to update this entity.");
 
-            var entity = _mapper.Map<User>(entityUpdateDto);
+            // Load existing entity to preserve fields not present in the DTO.
+            var entity = await _repository.GetByIdAsync(entityUpdateDto.Id, cancellationToken)
+                            ?? throw new KeyNotFoundException("User not found");
+
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.FirstName)) entity.FirstName = entityUpdateDto.FirstName;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.LastName)) entity.LastName = entityUpdateDto.LastName;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.UserName)) entity.UserName = entityUpdateDto.UserName;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.Phone)) entity.Phone = entityUpdateDto.Phone;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.Email)) entity.Email = entityUpdateDto.Email;
+            // FamilyId is nullable — null in DTO leaves existing; Guid.Empty clears it.
+            if (entityUpdateDto.FamilyId.HasValue)
+                entity.FamilyId = entityUpdateDto.FamilyId.Value == Guid.Empty ? null : entityUpdateDto.FamilyId;
+            if (entityUpdateDto.RoleId.HasValue && entityUpdateDto.RoleId.Value != Guid.Empty)
+                entity.RoleId = entityUpdateDto.RoleId.Value;
 
             if (entityUpdateDto.Image != null)
             {
-                var image = await _mediator.Send(new CreateUploadedFileCommand() { File = entityUpdateDto.Image, Alt = entity.FirstName, Description = null }, cancellationToken)
+                var image = await _mediator.Send(new CreateUploadedFileCommand
+                {
+                    File = entityUpdateDto.Image,
+                    Alt = entity.FirstName,
+                    Description = null
+                }, cancellationToken)
                                 ?? throw new InvalidOperationException("Couldn't save the file!");
                 if (image.Data != null)
                     entity.ImageId = image.Data.Id;
