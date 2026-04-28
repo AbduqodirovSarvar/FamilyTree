@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3dcd1b36-8161-42e7-8ae6-ebf785476e71" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Application.csproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/IAppDbContext.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/ICurrentUserService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/IHashService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/IPermissionService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/IRedisService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Interfaces/ITokenService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Mappings/AssemblyMarker.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Mappings/FamilyMappingProfile.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Mappings/UserMappingProfile.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Models/FamilyViewModel.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Models/SignInResponse.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Models/TokenViewModel.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Common/Models/UserViewModel.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Extentions/DepencyInjection.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Services/CurrentUserService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/UseCases/Auth/SignInCommand.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Behaviours/MailValidationAttribute.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Behaviours/PasswordValidationAttribute.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Behaviours/PhoneNumberValidationAttribute.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Behaviours/UriValidationAttribute.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Common/AudiTableEntity.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Common/BaseEntity.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Domain.csproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Entities/Family.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Entities/UploadedFile.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Entities/User.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Entities/UserRole.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Enums/Gender.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Enums/Permission.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Domain/Enums/Role.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FamilyTree.sln" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Persistence/Models/JWTConfiguration.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Persistence/Persistence.csproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Persistence/Services/TokenService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "AbduqodirovSarvar"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/AbduqodirovSarvar/FamilyTree.git",
+    "accountId": "cf8d2129-ce42-4793-a243-eefc66728b97"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="31uMN9fF1faoCZTC4TzYH73uQ5i" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "junie.onboarding.icon.badge.shown": "true",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-e03c56caf84a-JavaScript-WS-252.23892.411" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3dcd1b36-8161-42e7-8ae6-ebf785476e71" name="Changes" comment="" />
+      <created>1756369461977</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1756369461977</updated>
+      <workItem from="1756369463523" duration="6000" />
+    </task>
+    <servers />
+  </component>
+</project>
