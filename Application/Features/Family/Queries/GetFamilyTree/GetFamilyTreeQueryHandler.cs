@@ -15,10 +15,14 @@ namespace Application.Features.Family.Queries.GetFamilyTree
     /// Builds a forest of family-tree nodes for a given family.
     ///
     /// A node is a "family hub" — a primary member plus their spouses, with
-    /// children grouped per-spouse. Spouses are detected from <c>SpouseId</c>
-    /// AND implicitly from being the other parent of any child of the primary,
-    /// so a primary with multiple wives renders correctly even though the
-    /// schema stores only one canonical <c>SpouseId</c> per member.
+    /// children grouped per-spouse. Spouses are detected three ways so the tree
+    /// stays connected even when data is partial:
+    ///   1. <c>primary.SpouseId</c> (forward)
+    ///   2. another member with <c>SpouseId == primary.Id</c> (reverse — handles
+    ///      one-sided spouse links, which previously rendered the couple as two
+    ///      disconnected hubs)
+    ///   3. implicit via shared child (the "other parent" of any of primary's
+    ///      children who is in the same family)
     /// </summary>
     public class GetFamilyTreeQueryHandler(
         IMemberRepository memberRepository,
@@ -68,8 +72,18 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 return null;
             }
 
+            // Index of children per parent — single pass instead of repeated scans.
+            var childrenByParent = new Dictionary<Guid, List<MemberEntity>>();
+            foreach (var m in members)
+            {
+                if (m.FatherId.HasValue && InFamily(m.FatherId))
+                    AddChild(childrenByParent, m.FatherId!.Value, m);
+                if (m.MotherId.HasValue && InFamily(m.MotherId))
+                    AddChild(childrenByParent, m.MotherId!.Value, m);
+            }
+
             List<MemberEntity> ChildrenOf(Guid id) =>
-                members.Where(x => x.FatherId == id || x.MotherId == id).ToList();
+                childrenByParent.TryGetValue(id, out var list) ? list : new List<MemberEntity>();
 
             Guid? OtherParentOf(MemberEntity child, Guid memberId)
             {
@@ -78,23 +92,46 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 return null;
             }
 
+            // Reverse spouse index — every member that someone else points to via SpouseId.
+            // Used both to detect spouses bidirectionally and to skip these from root pass.
+            var spouseReverse = new Dictionary<Guid, List<Guid>>();
+            foreach (var m in members)
+            {
+                if (!InFamily(m.SpouseId)) continue;
+                if (!spouseReverse.TryGetValue(m.SpouseId!.Value, out var list))
+                    spouseReverse[m.SpouseId!.Value] = list = new List<Guid>();
+                list.Add(m.Id);
+            }
+
+            HashSet<Guid> SpousesOf(MemberEntity primary)
+            {
+                var ids = new HashSet<Guid>();
+
+                if (InFamily(primary.SpouseId)) ids.Add(primary.SpouseId!.Value);
+
+                if (spouseReverse.TryGetValue(primary.Id, out var reverseRefs))
+                    foreach (var rid in reverseRefs) ids.Add(rid);
+
+                foreach (var c in ChildrenOf(primary.Id))
+                {
+                    var otherId = OtherParentOf(c, primary.Id);
+                    if (otherId.HasValue && InFamily(otherId)) ids.Add(otherId.Value);
+                }
+
+                ids.Remove(primary.Id);
+                return ids;
+            }
+
             TreeNodeViewModel? BuildNode(Guid memberId)
             {
                 if (visited.Contains(memberId)) return null;
                 if (!byId.TryGetValue(memberId, out var primary)) return null;
                 visited.Add(memberId);
 
-                var spouseIds = new HashSet<Guid>();
-                if (InFamily(primary.SpouseId)) spouseIds.Add(primary.SpouseId!.Value);
+                var spouseIds = SpousesOf(primary);
+                foreach (var sid in spouseIds) visited.Add(sid);
 
                 var childrenOfPrimary = ChildrenOf(primary.Id);
-                foreach (var c in childrenOfPrimary)
-                {
-                    var otherId = OtherParentOf(c, primary.Id);
-                    if (otherId.HasValue && InFamily(otherId)) spouseIds.Add(otherId.Value);
-                }
-
-                foreach (var sid in spouseIds) visited.Add(sid);
 
                 var spouseGroups = new List<SpouseGroupViewModel>();
                 foreach (var sid in spouseIds)
@@ -134,11 +171,27 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 };
             }
 
-            // Roots: members with no in-family parent. Husband (gender=0) preferred
-            // over wife (gender=1) when both qualify, so couple is rendered once.
+            // Hub score: how rich would this member's hub be if we made them the
+            // primary? Weighted by descendant count, then spouse count, then a
+            // MALE-first cultural tiebreaker. This is what picks bobo (3 wives,
+            // 2 kids) over each individual wife as the root for a polygamous
+            // family — without it the rendering duplicates the husband across
+            // every wife's hub and orphans children whose mother isn't the
+            // chosen wife.
+            int HubScore(MemberEntity m)
+            {
+                int spouseCount = SpousesOf(m).Count;
+                int childCount = ChildrenOf(m.Id).Count;
+                return childCount * 100
+                       + spouseCount * 10
+                       + (m.Gender == Domain.Enums.Gender.MALE ? 1 : 0);
+            }
+
+            // Roots: members with no in-family parent. Within that, prefer the
+            // richest hub so the "head of family" surfaces as primary.
             var sorted = members
                 .OrderBy(m => PrimaryParentId(m).HasValue ? 1 : 0)
-                .ThenBy(m => (int)m.Gender)
+                .ThenByDescending(HubScore)
                 .ToList();
 
             var roots = new List<TreeNodeViewModel>();
@@ -164,6 +217,13 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 .OrderByDescending(NodeSize)
                 .ThenByDescending(NodeDepth)
                 .ToList();
+        }
+
+        private static void AddChild(Dictionary<Guid, List<MemberEntity>> map, Guid parentId, MemberEntity child)
+        {
+            if (!map.TryGetValue(parentId, out var list))
+                map[parentId] = list = new List<MemberEntity>();
+            if (!list.Contains(child)) list.Add(child);
         }
 
         private static int NodeSize(TreeNodeViewModel node)

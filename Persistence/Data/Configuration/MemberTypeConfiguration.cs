@@ -34,10 +34,13 @@ namespace Persistence.Data.Configuration
                 .HasForeignKey(m => m.MotherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Spouse relation (self-reference 1-1)
+            // Spouse relation (self-reference, many-to-one).
+            // Bir necha a'zo bir kishini SpouseId sifatida ko'rsatishi mumkin
+            // (bir er bir nechta xotinga ega bo'lgan holatlar). 1-1 dan
+            // ko'p-1 ga o'tildi va SpouseId ustidagi unique index olib tashlandi.
             builder.HasOne(m => m.Spouse)
-                .WithOne() // reciprocal navigation qo‘ymading, shuning uchun WithOne()
-                .HasForeignKey<Member>(m => m.SpouseId)
+                .WithMany()
+                .HasForeignKey(m => m.SpouseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Children relation (1-to-many)

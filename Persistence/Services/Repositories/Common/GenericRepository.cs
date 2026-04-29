@@ -46,7 +46,17 @@ namespace Persistence.Services.Repositories.Common
 
         public virtual async Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            _dbSet.Remove(entity);
+            // If another instance with the same primary key is already tracked
+            // by this DbContext (e.g. parent loaded via Include, then the child
+            // re-fetched from Redis cache as a fresh deserialized instance),
+            // EF throws "another instance is already being tracked" when we try
+            // to attach a second one. Reuse the tracked instance for removal so
+            // cascade delete of related entities works regardless of where the
+            // entity was sourced from.
+            var tracked = _context.ChangeTracker.Entries<TEntity>()
+                .FirstOrDefault(e => e.Entity.Id == entity.Id)?.Entity;
+
+            _dbSet.Remove(tracked ?? entity);
             await _redisService.RemoveAsync(entity.Id.ToString());
             return await _context.SaveChangesAsync(cancellationToken) > 0;
         }
