@@ -22,9 +22,11 @@ namespace Persistence.Data.Configuration
                 .HasForeignKey(m => m.FamilyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Father relation
+            // Father ↔ Children — bitta self-FK (FatherId), ikki tomondan navigatsiya.
+            // Ilgari "Father" va "Children" alohida konfiguratsiya qilingan edi va
+            // EF ikkinchi munosabat uchun shadow "FatherId1" ustun yaratayotgan edi.
             builder.HasOne(m => m.Father)
-                .WithMany() // farzandlar "Children"da saqlanadi
+                .WithMany(m => m.Children)
                 .HasForeignKey(m => m.FatherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -41,12 +43,6 @@ namespace Persistence.Data.Configuration
             builder.HasOne(m => m.Spouse)
                 .WithMany()
                 .HasForeignKey(m => m.SpouseId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Children relation (1-to-many)
-            builder.HasMany(m => m.Children)
-                .WithOne() // parent-childni aniq ko‘rsatmagan, lekin ishlaydi
-                .HasForeignKey(c => c.FatherId) // yoki c => c.MotherId qilib ajratib ko‘rsatishing mumkin
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

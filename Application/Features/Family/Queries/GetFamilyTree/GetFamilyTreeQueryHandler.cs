@@ -63,6 +63,32 @@ namespace Application.Features.Family.Queries.GetFamilyTree
             var byId = members.ToDictionary(m => m.Id);
             var visited = new HashSet<Guid>();
 
+            // Local helper so the projection can resolve names from byId without
+            // shipping the whole graph to the client. Returns null when the
+            // referenced person isn't part of this family's loaded set.
+            string? FormatName(Guid? id)
+            {
+                if (!id.HasValue || !byId.TryGetValue(id.Value, out var p)) return null;
+                var combined = $"{p.FirstName} {p.LastName}".Trim();
+                return string.IsNullOrEmpty(combined) ? null : combined;
+            }
+
+            TreeMemberViewModel ToTreeMember(MemberEntity m) => new()
+            {
+                Id = m.Id,
+                FirstName = m.FirstName,
+                LastName = m.LastName,
+                Description = m.Description,
+                Gender = m.Gender,
+                BirthDay = m.BirthDay,
+                DeathDay = m.DeathDay,
+                ImageId = m.ImageId,
+                ImageUrl = m.Image?.Url,
+                FatherName = FormatName(m.FatherId),
+                MotherName = FormatName(m.MotherId),
+                SpouseName = FormatName(m.SpouseId)
+            };
+
             bool InFamily(Guid? id) => id.HasValue && byId.ContainsKey(id.Value);
 
             Guid? PrimaryParentId(MemberEntity m)
@@ -244,16 +270,5 @@ namespace Application.Features.Family.Queries.GetFamilyTree
             return 1 + childMax;
         }
 
-        private static TreeMemberViewModel ToTreeMember(MemberEntity m) => new()
-        {
-            Id = m.Id,
-            FirstName = m.FirstName,
-            LastName = m.LastName,
-            Gender = m.Gender,
-            BirthDay = m.BirthDay,
-            DeathDay = m.DeathDay,
-            ImageId = m.ImageId,
-            ImageUrl = m.Image?.Url
-        };
     }
 }

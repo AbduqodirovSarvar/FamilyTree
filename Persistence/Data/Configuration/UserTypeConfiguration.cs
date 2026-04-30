@@ -19,11 +19,10 @@ namespace Persistence.Data.Configuration
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.UserName).IsUnique();
 
-            builder.HasOne(u => u.Family)
-            .WithMany(f => f.Users)
-            .HasForeignKey(u => u.FamilyId)
-            .IsRequired(false)
-            .OnDelete(DeleteBehavior.Cascade);
+            // User ↔ Family munosabati FamilyTypeConfiguration'da SetNull bilan
+            // konfiguratsiya qilingan. Bu yerda takroriy konfiguratsiya bo'lsa,
+            // OnDelete bahsi runtime model'ni snapshot'dan farq qildirib,
+            // PendingModelChangesWarning'ga olib kelar edi.
         }
     }
 }
