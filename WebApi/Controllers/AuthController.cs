@@ -5,6 +5,7 @@ using Application.Features.Auth.Commands.SignIn;
 using Application.Features.Auth.Commands.SignUp;
 using Application.Features.Auth.Commands.UpdateProfile;
 using Application.Features.Auth.Queries.GetMe;
+using Application.Features.Auth.Queries.GetMyPermissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,6 +68,20 @@ namespace WebApi.Controllers
         public async Task<IActionResult> GetMe()
         {
             var result = await _mediator.Send(new GetMeQuery());
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Lightweight endpoint the SPA calls right after sign-in / on app
+        /// boot so it can hide nav items and action buttons the current
+        /// user's role doesn't grant. Returns permission names as strings
+        /// (e.g. "GET_FAMILY") so the wire format survives enum-int reordering.
+        /// </summary>
+        [Authorize]
+        [HttpGet("me/permissions")]
+        public async Task<IActionResult> GetMyPermissions(CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new GetMyPermissionsQuery(), cancellationToken);
             return Ok(result);
         }
 

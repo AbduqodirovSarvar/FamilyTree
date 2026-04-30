@@ -53,7 +53,12 @@ namespace Application.Services.EntityServices.Auths
             if(await _redisService.GetAsync<string>($"confirmation-code-for-{resetSignInDto.Email}") != resetSignInDto.ConfirmationCode.ToString())
                 throw new UnauthorizedAccessException("Invalid confirmation code.");
 
-            var user = await _userRepository.GetByUsernameAsync(resetSignInDto.Email, cancellationToken)
+            // Look up by email (not username) — the DTO carries an email and
+            // SendEmailAsync above keys the Redis confirmation code by email,
+            // so the lookup must be consistent. Previously this called
+            // GetByUsernameAsync, which queried Users.UserName with the email
+            // value and always returned null → KeyNotFoundException.
+            var user = await _userRepository.GetByEmailAsync(resetSignInDto.Email, cancellationToken)
                             ?? throw new KeyNotFoundException("User with this email not found.");
 
             user.PasswordHash = _hashService.Hash(resetSignInDto.Password);

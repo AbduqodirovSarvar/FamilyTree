@@ -26,4 +26,10 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Tests reach into internal services (e.g. FamilyService) to verify
+         the ownership rules without needing a public-facing factory. -->
+    <InternalsVisibleTo Include="FamilyTree.Tests" />
+  </ItemGroup>
+
 </Project>
