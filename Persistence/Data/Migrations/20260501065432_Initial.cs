@@ -72,7 +72,6 @@ namespace Persistence.Data.Migrations
                     FamilyId = table.Column<Guid>(type: "uuid", nullable: false),
                     ImageId = table.Column<Guid>(type: "uuid", nullable: true),
                     FatherId = table.Column<Guid>(type: "uuid", nullable: true),
-                    FatherId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     MotherId = table.Column<Guid>(type: "uuid", nullable: true),
                     SpouseId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -95,11 +94,6 @@ namespace Persistence.Data.Migrations
                         principalTable: "Members",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Members_Members_FatherId1",
-                        column: x => x.FatherId1,
-                        principalTable: "Members",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Members_Members_MotherId",
                         column: x => x.MotherId,
@@ -193,7 +187,7 @@ namespace Persistence.Data.Migrations
                         column: x => x.FamilyId,
                         principalTable: "Families",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_Users_UploadedFiles_ImageId",
                         column: x => x.ImageId,
@@ -222,8 +216,7 @@ namespace Persistence.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Families_OwnerId",
                 table: "Families",
-                column: "OwnerId",
-                unique: true);
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Members_FamilyId",
@@ -234,11 +227,6 @@ namespace Persistence.Data.Migrations
                 name: "IX_Members_FatherId",
                 table: "Members",
                 column: "FatherId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Members_FatherId1",
-                table: "Members",
-                column: "FatherId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Members_ImageId",
@@ -253,8 +241,7 @@ namespace Persistence.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Members_SpouseId",
                 table: "Members",
-                column: "SpouseId",
-                unique: true);
+                column: "SpouseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UploadedFiles_Name",
