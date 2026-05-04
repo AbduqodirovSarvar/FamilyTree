@@ -29,5 +29,8 @@ namespace Domain.Entities
 
         public Guid RoleId { get; set; }
         public UserRole Role { get; set; } = null!;
+
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }

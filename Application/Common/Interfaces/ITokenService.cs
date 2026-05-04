@@ -1,4 +1,4 @@
-﻿using Application.Common.Models.Result;
+using Application.Common.Models.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +11,7 @@ namespace Application.Common.Interfaces
     public interface ITokenService
     {
         TokenViewModel GenerateToken(Claim[] claims);
+        string GenerateRefreshToken();
+        DateTime GetRefreshTokenExpiry();
     }
 }

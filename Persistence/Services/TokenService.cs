@@ -1,10 +1,11 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Models.Result;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Persistence.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Persistence.Services
@@ -12,6 +13,7 @@ namespace Persistence.Services
     public class TokenService(IOptions<JWTConfiguration> config) : ITokenService
     {
         private readonly JWTConfiguration _configuration = config.Value;
+
         public TokenViewModel GenerateToken(Claim[] userClaims)
         {
             var jwtClaim = new[]
@@ -25,11 +27,14 @@ namespace Persistence.Services
                 SecurityAlgorithms.HmacSha256
             );
 
+            var accessExpiry = DateTime.UtcNow.AddMinutes(_configuration.AccessTokenExpirationMinutes);
+            var refreshExpiry = GetRefreshTokenExpiry();
+
             var token = new JwtSecurityToken(
                 _configuration.ValidIssuer,
                 _configuration.ValidAudience,
                 userClaims.Concat(jwtClaim),
-                expires: DateTime.UtcNow.AddDays(1),
+                expires: accessExpiry,
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -37,10 +42,22 @@ namespace Persistence.Services
             return new TokenViewModel
             {
                 AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = string.Empty,
+                RefreshToken = GenerateRefreshToken(),
+                AccessTokenExpiration = accessExpiry,
+                RefreshTokenExpiration = refreshExpiry,
                 UserId = userClaims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty,
             };
         }
 
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return Convert.ToBase64String(randomBytes);
+        }
+
+        public DateTime GetRefreshTokenExpiry()
+            => DateTime.UtcNow.AddDays(_configuration.RefreshTokenExpirationDays);
     }
 }

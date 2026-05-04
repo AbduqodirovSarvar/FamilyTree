@@ -40,9 +40,26 @@ namespace Application.Services.EntityServices.Auths
         private readonly IMapper _mapper = mapper;
         private readonly IMediator _mediator = mediator;
 
-        public Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        public async Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                throw new UnauthorizedAccessException("Refresh token is required.");
+
+            var user = await _userRepository.GetAsync(x => x.RefreshToken == refreshToken, cancellationToken)
+                       ?? throw new UnauthorizedAccessException("Invalid refresh token.");
+
+            if (user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new UnauthorizedAccessException("Refresh token has expired.");
+
+            var claims = BuildUserClaims(user);
+            var tokens = _tokenService.GenerateToken([.. claims]);
+
+            // Rotate refresh token — invalidate the old one and persist the new pair.
+            user.RefreshToken = tokens.RefreshToken;
+            user.RefreshTokenExpiryTime = tokens.RefreshTokenExpiration;
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            return tokens;
         }
 
         public async Task<bool> ResetAsync(ResetSignInDto resetSignInDto, CancellationToken cancellationToken)
@@ -78,7 +95,7 @@ namespace Application.Services.EntityServices.Auths
 
         public async Task<TokenViewModel> SignInAsync(SignInDto signInDto, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetAsync(x => x.UserName == signInDto.Login 
+            var user = await _userRepository.GetAsync(x => x.UserName == signInDto.Login
                                                         || x.Email == signInDto.Login
                                                         || x.Phone == signInDto.Login, cancellationToken)
                        ?? throw new UnauthorizedAccessException("Invalid username or password.");
@@ -88,22 +105,40 @@ namespace Application.Services.EntityServices.Auths
                 throw new UnauthorizedAccessException("Invalid username or password.");
             }
 
-            var claims = new List<Claim>
+            var claims = BuildUserClaims(user);
+            var tokens = _tokenService.GenerateToken([.. claims]);
+
+            // Persist the refresh token so /auth/refresh-token can validate it later.
+            user.RefreshToken = tokens.RefreshToken;
+            user.RefreshTokenExpiryTime = tokens.RefreshTokenExpiration;
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            return tokens;
+        }
+
+        private static List<Claim> BuildUserClaims(Domain.Entities.User user)
+        {
+            return new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.UserName ?? string.Empty),
                 new(ClaimTypes.Email, user.Email ?? string.Empty),
                 new(ClaimTypes.Role, user.RoleId.ToString())
             };
-
-            var accessToken = _tokenService.GenerateToken([.. claims]);
-
-            return accessToken;
         }
 
-        public Task<bool> SignOutAsync(string token, CancellationToken cancellationToken)
+        public async Task<bool> SignOutAsync(string refreshToken, CancellationToken cancellationToken)
         {
-            return Task.FromResult(true);
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return true;
+
+            var user = await _userRepository.GetAsync(x => x.RefreshToken == refreshToken, cancellationToken);
+            if (user is null) return true;
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return true;
         }
 
         public async Task<bool> SignUpAsync(CreateUserDto signUpDto, CancellationToken cancellationToken)

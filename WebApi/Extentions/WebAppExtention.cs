@@ -15,12 +15,16 @@ namespace WebApi.Extentions
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "FamilyTree API V1");
                 c.RoutePrefix = string.Empty;
             });
-            app.UseHttpsRedirection();
             // Serve files from wwwroot (e.g. /uploads/<guid>.png) so the SPA can render avatars.
             app.UseStaticFiles();
+            app.UseRouting();
+            // CORS must run before Authentication so preflight (OPTIONS) requests
+            // get the Access-Control-Allow-* headers attached even when the route
+            // is [Authorize]. Wrong order is the classic cause of "blocked by CORS
+            // policy: No 'Access-Control-Allow-Origin' header" errors.
+            app.UseCors("AddCors");
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseCors("AddCors");
             app.MapControllers();
             await app.UpdateMigration();
             await app.Seed();

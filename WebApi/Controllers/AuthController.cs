@@ -1,5 +1,6 @@
 ﻿using Application.Features.Auth.Commands.ChangePassword;
 using Application.Features.Auth.Commands.Confirmation;
+using Application.Features.Auth.Commands.RefreshToken;
 using Application.Features.Auth.Commands.Reset;
 using Application.Features.Auth.Commands.SignIn;
 using Application.Features.Auth.Commands.SignUp;
@@ -57,10 +58,14 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh-token")]
-        public IActionResult RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
         {
-            return Ok();
+            if (command == null)
+                return BadRequest("Request cannot be null");
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
         [Authorize]
