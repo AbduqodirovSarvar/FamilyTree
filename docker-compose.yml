@@ -42,10 +42,8 @@ services:
       - family-tree-net
 
   webapi:
-    build:
-      context: .
-      dockerfile: WebApi/Dockerfile
-    image: family-tree-api:latest
+    image: ${DOCKER_USERNAME:-yourusername}/family-tree-api:${IMAGE_TAG:-v1.0.0}
+    pull_policy: always
     container_name: family-tree-api
     restart: unless-stopped
     depends_on:
