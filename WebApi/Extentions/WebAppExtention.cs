@@ -9,12 +9,15 @@ namespace WebApi.Extentions
     {
         public static async Task AddWebAppExtention(this WebApplication app)
         {
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            if (app.Environment.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "FamilyTree API V1");
-                c.RoutePrefix = string.Empty;
-            });
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "FamilyTree API V1");
+                    c.RoutePrefix = string.Empty;
+                });
+            }
             // Serve files from wwwroot (e.g. /uploads/<guid>.png) so the SPA can render avatars.
             app.UseStaticFiles();
             app.UseRouting();
