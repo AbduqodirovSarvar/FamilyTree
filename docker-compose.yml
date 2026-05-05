@@ -1,62 +1,17 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: family-tree-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-FamilyTree}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      # Host:container — host port shifted to 5433 to avoid clashing with
-      # other Postgres instances. Inside the docker network the api still
-      # connects to `db:5432`.
-      - "${POSTGRES_PORT:-5433}:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-FamilyTree}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    networks:
-      - family-tree-net
-
-  redis:
-    image: redis:7-alpine
-    container_name: family-tree-redis
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      # Host port 6380 to avoid clashing with a host-installed Redis;
-      # internal port stays at 6379.
-      - "${REDIS_PORT:-6380}:6379"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    networks:
-      - family-tree-net
-
   webapi:
-    image: ${DOCKER_USERNAME:-yourusername}/family-tree-api:${IMAGE_TAG:-v1.0.0}
+    image: ${DOCKER_USERNAME:-yourusername}/family-tree-api:${IMAGE_TAG:-latest}
     pull_policy: always
     container_name: family-tree-api
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       # .NET reads `ConnectionStrings__Foo` as `ConnectionStrings:Foo`.
-      ConnectionStrings__PostgreSqlConnection: "Server=db;Port=5432;Database=${POSTGRES_DB:-FamilyTree};User Id=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};"
-      ConnectionStrings__Redis: "redis:6379"
-      JWTConfiguration__Secret: ${JWT_SECRET:-c822c478-ea26-46bc-83af-ce145ae2c110}
+      # global-postgres / global-redis — `database` repo'dagi container nomlari.
+      # Ulanish faqat global-app-network orqali ishlaydi.
+      ConnectionStrings__PostgreSqlConnection: "Server=global-postgres;Port=5432;Database=${POSTGRES_DB:?POSTGRES_DB kerak};User Id=${POSTGRES_USER:?POSTGRES_USER kerak};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD kerak};"
+      ConnectionStrings__Redis: "global-redis:6379"
+      JWTConfiguration__Secret: ${JWT_SECRET:?JWT_SECRET kerak}
       JWTConfiguration__ValidIssuer: ${JWT_ISSUER:-https://family-tree.uz}
       JWTConfiguration__ValidAudience: ${JWT_AUDIENCE:-https://family-tree.uz}
     ports:
@@ -64,13 +19,14 @@ services:
     volumes:
       - uploaded-files:/app/wwwroot
     networks:
-      - family-tree-net
+      - global-net
 
 networks:
-  family-tree-net:
-    driver: bridge
+  # `database` repo yaratgan tashqi network. Uni avval ishga tushirish kerak:
+  #   cd ../../database && docker compose up -d
+  global-net:
+    external: true
+    name: global-app-network
 
 volumes:
-  postgres-data:
-  redis-data:
   uploaded-files:

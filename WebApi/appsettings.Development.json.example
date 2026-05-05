@@ -1,0 +1,15 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "PostgreSqlConnection": "Server=localhost;Port=5433;Database=familytree;User Id=familytree;Password=YOUR_FAMILYTREE_PASSWORD;",
+    "Redis": "localhost:6379"
+  },
+  "JWTConfiguration": {
+    "Secret": "PASTE_STRONG_RANDOM_SECRET_HERE"
+  }
+}
