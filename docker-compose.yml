@@ -1,7 +1,11 @@
 services:
   webapi:
     image: ${DOCKER_USERNAME:-yourusername}/family-tree-api:${IMAGE_TAG:-latest}
-    pull_policy: always
+    # Lokal `docker compose up --build` qilganda shu yerdan build qiladi.
+    # `docker compose pull && up -d` qilsa esa Docker Hub'dan tortib oladi (production).
+    build:
+      context: ./
+      dockerfile: WebApi/Dockerfile
     container_name: family-tree-api
     restart: unless-stopped
     environment:
