@@ -11,10 +11,12 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,7 +30,8 @@ namespace Application.Services.EntityServices.Auths
         IEmailService emailService,
         IRedisService redisService,
         IMapper mapper,
-        IMediator mediator
+        IMediator mediator,
+        IConfiguration configuration
         ) : IAuthService
     {
         private readonly IUserRepository _userRepository = userRepository;
@@ -39,6 +42,13 @@ namespace Application.Services.EntityServices.Auths
         private readonly IRedisService _redisService = redisService;
         private readonly IMapper _mapper = mapper;
         private readonly IMediator _mediator = mediator;
+        private readonly IConfiguration _configuration = configuration;
+
+        // Confirmation tokens are 256 bits of entropy, encoded URL-safe so they
+        // can ride in a query string. Hash-only storage means a stolen DB
+        // dump is useless without each victim's email link.
+        private const int ConfirmationTokenBytes = 32;
+        private static readonly TimeSpan ConfirmationTokenLifetime = TimeSpan.FromHours(24);
 
         public async Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
@@ -85,8 +95,14 @@ namespace Application.Services.EntityServices.Auths
 
         public async Task<bool> SendEmailAsync(string email, CancellationToken cancellationToken)
         {
-            _ = await _userRepository.GetByEmailAsync(email, cancellationToken)
+            var user = await _userRepository.GetByEmailAsync(email, cancellationToken)
                         ?? throw new KeyNotFoundException("User with this email not found.");
+
+            // Block all outbound mail until the address is confirmed — otherwise
+            // an attacker can register a stranger's address and use the password
+            // reset flow as a free email-relay.
+            if (!user.EmailConfirmed)
+                throw new InvalidOperationException("Email is not confirmed. Please confirm your email first.");
 
             var confirmationCode = new Random().Next(100000, 999999).ToString();
             await _redisService.SetAsync($"confirmation-code-for-{email}", confirmationCode);
@@ -163,8 +179,111 @@ namespace Application.Services.EntityServices.Auths
 
             user.PasswordHash = _hashService.Hash(signUpDto.Password);
 
+            // Generate confirmation token before persisting so the user row
+            // and the link in the email can never disagree.
+            var (rawToken, hash) = GenerateConfirmationToken();
+            user.EmailConfirmed = false;
+            user.EmailConfirmationTokenHash = hash;
+            user.EmailConfirmationTokenExpiresAt = DateTime.UtcNow.Add(ConfirmationTokenLifetime);
+
             var result = await _userRepository.CreateAsync(user, cancellationToken);
-            return result != null;
+            if (result == null) return false;
+
+            // Email failures should not roll back the account — the user can
+            // request a resend from Settings. Log and move on.
+            try
+            {
+                await SendConfirmationEmailAsync(user.Email, rawToken);
+            }
+            catch
+            {
+                // swallow — surfaced via the resend flow instead
+            }
+
+            return true;
+        }
+
+        public async Task<bool> ConfirmEmailAsync(string rawToken, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(rawToken))
+                throw new ArgumentException("Token is required.", nameof(rawToken));
+
+            var hash = HashToken(rawToken);
+            var user = await _userRepository.GetAsync(
+                u => u.EmailConfirmationTokenHash == hash,
+                cancellationToken)
+                ?? throw new UnauthorizedAccessException("Invalid or expired confirmation link.");
+
+            if (user.EmailConfirmed)
+                return true; // idempotent — clicking the link twice is fine
+
+            if (user.EmailConfirmationTokenExpiresAt is null
+                || user.EmailConfirmationTokenExpiresAt <= DateTime.UtcNow)
+                throw new UnauthorizedAccessException("Invalid or expired confirmation link.");
+
+            user.EmailConfirmed = true;
+            user.EmailConfirmedAt = DateTime.UtcNow;
+            // Single-use: clear the hash so the link can't be replayed.
+            user.EmailConfirmationTokenHash = null;
+            user.EmailConfirmationTokenExpiresAt = null;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return true;
+        }
+
+        public async Task<bool> ResendConfirmationAsync(string email, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.", nameof(email));
+
+            var user = await _userRepository.GetByEmailAsync(email, cancellationToken)
+                ?? throw new KeyNotFoundException("User with this email not found.");
+
+            if (user.EmailConfirmed)
+                throw new InvalidOperationException("Email is already confirmed.");
+
+            var (rawToken, hash) = GenerateConfirmationToken();
+            user.EmailConfirmationTokenHash = hash;
+            user.EmailConfirmationTokenExpiresAt = DateTime.UtcNow.Add(ConfirmationTokenLifetime);
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            return await SendConfirmationEmailAsync(user.Email, rawToken);
+        }
+
+        // ─── Helpers ─────────────────────────────────────────────────
+
+        private static (string raw, string hash) GenerateConfirmationToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(ConfirmationTokenBytes);
+            // URL-safe base64 (no '+' '/' '=' so the value survives query strings).
+            var raw = Convert.ToBase64String(bytes)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+            return (raw, HashToken(raw));
+        }
+
+        private static string HashToken(string raw)
+        {
+            using var sha = SHA256.Create();
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(raw));
+            return Convert.ToHexString(bytes);
+        }
+
+        private async Task<bool> SendConfirmationEmailAsync(string email, string rawToken)
+        {
+            var baseUrl = _configuration["App:FrontendBaseUrl"]?.TrimEnd('/')
+                          ?? throw new InvalidOperationException("App:FrontendBaseUrl is not configured.");
+            var link = $"{baseUrl}/auth/confirm-email?token={rawToken}";
+
+            var body =
+                "<p>Hello,</p>" +
+                "<p>Confirm your email address by clicking the link below. The link is valid for 24 hours and can be used once.</p>" +
+                $"<p><a href=\"{link}\">Confirm email</a></p>" +
+                $"<p>If the button doesn't work, copy and paste this URL into your browser:<br>{link}</p>" +
+                "<p>If you didn't create an account, ignore this email.</p>";
+
+            return await _emailService.SendEmailAsync(email, "Confirm your email", body);
         }
     }
 }

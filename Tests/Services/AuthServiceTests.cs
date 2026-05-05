@@ -10,6 +10,7 @@ using AutoMapper;
 using Domain.Entities;
 using FamilyTree.Tests.Helpers;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 
 namespace FamilyTree.Tests.Services;
 
@@ -29,9 +30,19 @@ public class AuthServiceTests
     private readonly Mock<IMapper> _mapper = new();
     private readonly Mock<IMediator> _mediator = new();
 
+    /// <summary>In-memory IConfiguration used by tests — the email confirmation
+    /// flow needs `App:FrontendBaseUrl` to build the link sent in the welcome
+    /// email; tests don't actually fire mail so any value works.</summary>
+    private static readonly IConfiguration _configuration = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["App:FrontendBaseUrl"] = "https://test.local"
+        })
+        .Build();
+
     private AuthService CreateSut() => new(
         _users.Object, _roles.Object, _token.Object, _hash.Object,
-        _email.Object, _redis.Object, _mapper.Object, _mediator.Object);
+        _email.Object, _redis.Object, _mapper.Object, _mediator.Object, _configuration);
 
     // ─── SignUpAsync ──────────────────────────────────────────────
 
@@ -229,6 +240,133 @@ public class AuthServiceTests
         ok.Should().BeTrue();
         _redis.Verify(r => r.SetAsync($"confirmation-code-for-{email}",
             It.IsAny<string>(), It.IsAny<TimeSpan?>()), Times.Once);
+    }
+
+    // ─── ConfirmEmailAsync ────────────────────────────────────────
+
+    [Fact]
+    public async Task ConfirmEmail_BlankToken_Throws()
+    {
+        var sut = CreateSut();
+        var act = () => sut.ConfirmEmailAsync("", default);
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_TokenNotInDb_Throws()
+    {
+        // No user matches the hash → reject without leaking which case it was.
+        _users.Setup(r => r.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        var sut = CreateSut();
+
+        var act = () => sut.ConfirmEmailAsync("not-a-real-token", default);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_AlreadyConfirmed_IsIdempotent()
+    {
+        // Re-clicking the link after success must not regress — it just no-ops.
+        var user = TestData.User(emailConfirmed: true);
+        _users.Setup(r => r.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var sut = CreateSut();
+
+        var ok = await sut.ConfirmEmailAsync("any-token", default);
+
+        ok.Should().BeTrue();
+        // No write — already confirmed.
+        _users.Verify(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_ExpiredToken_Throws()
+    {
+        var user = TestData.User(emailConfirmed: false);
+        user.EmailConfirmationTokenHash = "stub";
+        user.EmailConfirmationTokenExpiresAt = DateTime.UtcNow.AddMinutes(-5);
+        _users.Setup(r => r.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var sut = CreateSut();
+
+        var act = () => sut.ConfirmEmailAsync("token", default);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task ConfirmEmail_HappyPath_SetsFlagAndClearsToken()
+    {
+        var user = TestData.User(emailConfirmed: false);
+        user.EmailConfirmationTokenHash = "stub";
+        user.EmailConfirmationTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+        _users.Setup(r => r.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _users.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var sut = CreateSut();
+
+        var ok = await sut.ConfirmEmailAsync("token", default);
+
+        ok.Should().BeTrue();
+        user.EmailConfirmed.Should().BeTrue();
+        user.EmailConfirmedAt.Should().NotBeNull();
+        // Single-use guarantee — the link can't be replayed.
+        user.EmailConfirmationTokenHash.Should().BeNull();
+        user.EmailConfirmationTokenExpiresAt.Should().BeNull();
+    }
+
+    // ─── ResendConfirmationAsync ──────────────────────────────────
+
+    [Fact]
+    public async Task Resend_AlreadyConfirmed_Throws()
+    {
+        var user = TestData.User(email: "u@e.com", emailConfirmed: true);
+        _users.Setup(r => r.GetByEmailAsync("u@e.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var sut = CreateSut();
+
+        var act = () => sut.ResendConfirmationAsync("u@e.com", default);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Resend_HappyPath_RotatesTokenAndSendsEmail()
+    {
+        var user = TestData.User(email: "u@e.com", emailConfirmed: false);
+        _users.Setup(r => r.GetByEmailAsync("u@e.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _users.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _email.Setup(e => e.SendEmailAsync("u@e.com", It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        var sut = CreateSut();
+
+        var ok = await sut.ResendConfirmationAsync("u@e.com", default);
+
+        ok.Should().BeTrue();
+        user.EmailConfirmationTokenHash.Should().NotBeNullOrEmpty();
+        user.EmailConfirmationTokenExpiresAt.Should().NotBeNull();
+        _email.Verify(e => e.SendEmailAsync("u@e.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+    }
+
+    // ─── SendEmail / Reset block on unconfirmed email ─────────────
+
+    [Fact]
+    public async Task SendEmail_UnconfirmedUser_ThrowsInvalidOperation()
+    {
+        // Reset-password mail must NOT go out for an account whose owner
+        // hasn't proved they control the inbox — otherwise we become a
+        // free relay for sending mail to arbitrary addresses.
+        var user = TestData.User(email: "u@e.com", emailConfirmed: false);
+        _users.Setup(r => r.GetByEmailAsync("u@e.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var sut = CreateSut();
+
+        var act = () => sut.SendEmailAsync("u@e.com", default);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _email.Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     // ResetSignInDto and SignInDto are abstract; concrete subclasses let tests build instances.

@@ -27,5 +27,9 @@ namespace Application.Common.Models.ViewModels
 
         public Guid RoleId { get; init; }
         public UserRoleViewModel? Role { get; init; }
+
+        // Surfaced so the UI can hide/show the "Resend confirmation" button
+        // and warn the user that password-reset is blocked until confirmed.
+        public bool EmailConfirmed { get; init; }
     }
 }

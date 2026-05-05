@@ -54,7 +54,12 @@ internal static class TestData
         string firstName = "Test",
         string lastName = "User",
         string email = "test@example.com",
-        string passwordHash = "hashed") =>
+        string passwordHash = "hashed",
+        // Tests default to a confirmed user — the email-confirmation gate
+        // guards a couple of specific flows (SendEmail / Reset) and most
+        // tests don't want to rebuild that state per case. Use
+        // `emailConfirmed: false` to exercise the unconfirmed branch.
+        bool emailConfirmed = true) =>
         new()
         {
             Id = id ?? Guid.NewGuid(),
@@ -62,7 +67,8 @@ internal static class TestData
             FirstName = firstName,
             LastName = lastName,
             Email = email,
-            PasswordHash = passwordHash
+            PasswordHash = passwordHash,
+            EmailConfirmed = emailConfirmed
         };
 
     public static UserRole UserRole(

@@ -18,6 +18,8 @@ services:
       JWTConfiguration__Secret: ${JWT_SECRET:?JWT_SECRET kerak}
       JWTConfiguration__ValidIssuer: ${JWT_ISSUER:-https://family-tree.uz}
       JWTConfiguration__ValidAudience: ${JWT_AUDIENCE:-https://family-tree.uz}
+      # Email confirmation linki shu URL'dan boshlanadi: {App__FrontendBaseUrl}/confirm-email?token=...
+      App__FrontendBaseUrl: ${APP_FRONTEND_BASE_URL:-https://admin.ft.svlab.uz}
     ports:
       - "${WEBAPI_PORT:-5009}:8080"
     volumes:

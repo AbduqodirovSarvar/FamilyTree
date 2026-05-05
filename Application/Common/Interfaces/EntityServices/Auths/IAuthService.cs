@@ -1,4 +1,4 @@
-﻿using Application.Common.Models;
+using Application.Common.Models;
 using Application.Common.Models.Dtos.Auth;
 using Application.Common.Models.Dtos.User;
 using Application.Common.Models.Result;
@@ -19,5 +19,14 @@ namespace Application.Common.Interfaces.EntityServices.Auths
         Task<TokenViewModel> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
         Task<bool> SignOutAsync(string token, CancellationToken cancellationToken);
         Task<bool> SendEmailAsync(string email, CancellationToken cancellationToken);
+
+        // ─── Email confirmation ─────────────────────────────────────────
+        /// <summary>Confirms a user's email by exchanging the raw token from the
+        /// email link for the stored hash. Single-use — clears the token on success.</summary>
+        Task<bool> ConfirmEmailAsync(string rawToken, CancellationToken cancellationToken);
+
+        /// <summary>Re-issues a fresh confirmation token and emails it. Used by
+        /// both the public "resend" form and the in-app Settings → Resend button.</summary>
+        Task<bool> ResendConfirmationAsync(string email, CancellationToken cancellationToken);
     }
 }

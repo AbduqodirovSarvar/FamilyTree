@@ -32,5 +32,16 @@ namespace Domain.Entities
 
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
+
+        // ─── Email confirmation ─────────────────────────────────────────
+        // Until EmailConfirmed is true, password-reset emails (and any other
+        // outbound message keyed by this address) are blocked. Sign-in still
+        // works — the gate is on email-sending, not authentication.
+        public bool EmailConfirmed { get; set; } = false;
+        public DateTime? EmailConfirmedAt { get; set; }
+        // SHA-256 hash of the raw confirmation token. Storing the hash means a
+        // DB leak doesn't expose live tokens. Cleared on successful confirm.
+        public string? EmailConfirmationTokenHash { get; set; }
+        public DateTime? EmailConfirmationTokenExpiresAt { get; set; }
     }
 }
