@@ -107,6 +107,8 @@ jobs:
           script: |
             set -e
             cd ~/svlab/family-tree/FamilyTree
+            echo "▶ Pulling latest code..."
+            git pull origin master
             echo "▶ Pulling latest image..."
             docker compose pull
             echo "▶ Restarting containers..."
