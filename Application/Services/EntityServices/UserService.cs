@@ -82,6 +82,33 @@ namespace Application.Services.EntityServices
             if (entityUpdateDto.RoleId.HasValue && entityUpdateDto.RoleId.Value != Guid.Empty)
                 entity.RoleId = entityUpdateDto.RoleId.Value;
 
+            // Email-confirmation override is admin-only territory. We re-check
+            // permissions here (rather than relying on the outer UPDATE_USER
+            // gate) because flipping this flag bypasses the entire ownership-
+            // verification flow — granting it must be a deliberate action from
+            // someone with the full User permission set.
+            if (entityUpdateDto.EmailConfirmed.HasValue
+                && entityUpdateDto.EmailConfirmed.Value != entity.EmailConfirmed)
+            {
+                if (!await HasFullUserAccessAsync())
+                    throw new UnauthorizedAccessException(
+                        "Only administrators or users with full User permissions can change email confirmation status.");
+
+                if (entityUpdateDto.EmailConfirmed.Value)
+                {
+                    entity.EmailConfirmed = true;
+                    entity.EmailConfirmedAt = DateTime.UtcNow;
+                    // Pending confirmation token is now meaningless — purge it.
+                    entity.EmailConfirmationTokenHash = null;
+                    entity.EmailConfirmationTokenExpiresAt = null;
+                }
+                else
+                {
+                    entity.EmailConfirmed = false;
+                    entity.EmailConfirmedAt = null;
+                }
+            }
+
             if (entityUpdateDto.Image != null)
             {
                 var image = await _mediator.Send(new CreateUploadedFileCommand
@@ -119,6 +146,23 @@ namespace Application.Services.EntityServices
             }
 
             return await _repository.DeleteAsync(entity, cancellationToken);
+        }
+
+        // ─── Helpers ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// True when the caller can perform every CRUD operation on User. This
+        /// is used as the gate for super-sensitive flags like
+        /// <c>EmailConfirmed</c>: anyone with the complete User permission set
+        /// (admins by default, plus any explicitly elevated role) qualifies.
+        /// </summary>
+        private async Task<bool> HasFullUserAccessAsync()
+        {
+            string typeName = typeof(User).Name;
+            return await _permissionService.CheckPermission(typeName, OperationType.GET)
+                && await _permissionService.CheckPermission(typeName, OperationType.CREATE)
+                && await _permissionService.CheckPermission(typeName, OperationType.UPDATE)
+                && await _permissionService.CheckPermission(typeName, OperationType.DELETE);
         }
     }
 }

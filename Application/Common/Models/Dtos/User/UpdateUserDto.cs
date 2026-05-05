@@ -20,5 +20,9 @@ namespace Application.Common.Models.Dtos.User
         public IFormFile? Image { get; init; } = null;
         public Guid? RoleId { get; init; } = null;
         public ChangeUserPasswordDto? Password { get; init; } = null;
+        // Admin-only override — only callers with the full User permission set
+        // (or the ADMIN role) are allowed to flip this flag. UserService enforces
+        // the gate so a tampered DTO can't bypass email verification.
+        public bool? EmailConfirmed { get; init; } = null;
     }
 }
