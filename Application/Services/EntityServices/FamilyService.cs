@@ -107,9 +107,12 @@ namespace Application.Services.EntityServices
 
             await EnsureOwnerAsync(entity, cancellationToken);
 
+            // PUT semantic for nullable Description — empty string clears it.
+            // Required fields (Name, FamilyName, OwnerId) keep PATCH guard so a
+            // blank submission can't accidentally null out a non-nullable column.
             if (!string.IsNullOrWhiteSpace(entityUpdateDto.Name)) entity.Name = entityUpdateDto.Name;
             if (!string.IsNullOrWhiteSpace(entityUpdateDto.FamilyName)) entity.FamilyName = entityUpdateDto.FamilyName;
-            if (entityUpdateDto.Description != null) entity.Description = entityUpdateDto.Description;
+            entity.Description = string.IsNullOrEmpty(entityUpdateDto.Description) ? null : entityUpdateDto.Description;
             if (entityUpdateDto.OwnerId.HasValue && entityUpdateDto.OwnerId.Value != Guid.Empty)
                 entity.OwnerId = entityUpdateDto.OwnerId.Value;
 

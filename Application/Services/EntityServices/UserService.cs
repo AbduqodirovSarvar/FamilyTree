@@ -65,14 +65,20 @@ namespace Application.Services.EntityServices
             var entity = await _repository.GetByIdAsync(entityUpdateDto.Id, cancellationToken)
                             ?? throw new KeyNotFoundException("User not found");
 
+            // PUT semantic for required strings: still guard against blank
+            // so a partial save can't accidentally null out FirstName/UserName
+            // (those columns aren't nullable).
             if (!string.IsNullOrWhiteSpace(entityUpdateDto.FirstName)) entity.FirstName = entityUpdateDto.FirstName;
-            if (!string.IsNullOrWhiteSpace(entityUpdateDto.LastName)) entity.LastName = entityUpdateDto.LastName;
             if (!string.IsNullOrWhiteSpace(entityUpdateDto.UserName)) entity.UserName = entityUpdateDto.UserName;
-            if (!string.IsNullOrWhiteSpace(entityUpdateDto.Phone)) entity.Phone = entityUpdateDto.Phone;
-            if (!string.IsNullOrWhiteSpace(entityUpdateDto.Email)) entity.Email = entityUpdateDto.Email;
-            // FamilyId is nullable — null in DTO leaves existing; Guid.Empty clears it.
-            if (entityUpdateDto.FamilyId.HasValue)
-                entity.FamilyId = entityUpdateDto.FamilyId.Value == Guid.Empty ? null : entityUpdateDto.FamilyId;
+
+            // PUT semantic for nullable strings: empty string clears the column.
+            entity.LastName = string.IsNullOrEmpty(entityUpdateDto.LastName) ? null : entityUpdateDto.LastName;
+            entity.Phone = string.IsNullOrEmpty(entityUpdateDto.Phone) ? null : entityUpdateDto.Phone;
+            entity.Email = string.IsNullOrEmpty(entityUpdateDto.Email) ? null : entityUpdateDto.Email;
+
+            // Nullable FamilyId — Guid.Empty clears it, anything else (incl. null) is the new value.
+            entity.FamilyId = entityUpdateDto.FamilyId == Guid.Empty ? null : entityUpdateDto.FamilyId;
+
             if (entityUpdateDto.RoleId.HasValue && entityUpdateDto.RoleId.Value != Guid.Empty)
                 entity.RoleId = entityUpdateDto.RoleId.Value;
 

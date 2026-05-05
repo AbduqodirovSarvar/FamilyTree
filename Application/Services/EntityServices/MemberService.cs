@@ -117,18 +117,25 @@ namespace Application.Services.EntityServices
                 await EnsureOwnsFamilyAsync(entityUpdateDto.FamilyId.Value, cancellationToken);
             }
 
-            if (entityUpdateDto.FirstName != null) entity.FirstName = entityUpdateDto.FirstName;
-            if (entityUpdateDto.LastName != null) entity.LastName = entityUpdateDto.LastName;
-            if (entityUpdateDto.Description != null) entity.Description = entityUpdateDto.Description;
+            // PUT semantic for nullable fields — the DTO value IS the new value.
+            // Frontend sends an empty string for cleared fields, which the model
+            // binder maps to null for nullable types. Without this, clearing a
+            // field on the form (e.g. wiping DeathDay) silently kept the old value
+            // because the old PATCH "if not null" guard never overwrote it.
+            entity.FirstName = string.IsNullOrEmpty(entityUpdateDto.FirstName) ? null : entityUpdateDto.FirstName;
+            entity.LastName = string.IsNullOrEmpty(entityUpdateDto.LastName) ? null : entityUpdateDto.LastName;
+            entity.Description = string.IsNullOrEmpty(entityUpdateDto.Description) ? null : entityUpdateDto.Description;
+            entity.DeathDay = entityUpdateDto.DeathDay;
+            entity.FatherId = entityUpdateDto.FatherId == Guid.Empty ? null : entityUpdateDto.FatherId;
+            entity.MotherId = entityUpdateDto.MotherId == Guid.Empty ? null : entityUpdateDto.MotherId;
+            entity.SpouseId = entityUpdateDto.SpouseId == Guid.Empty ? null : entityUpdateDto.SpouseId;
+
+            // Required fields keep PATCH semantic — the DB column is non-nullable
+            // so we only overwrite when the caller explicitly provided a value.
             if (entityUpdateDto.BirthDay.HasValue) entity.BirthDay = entityUpdateDto.BirthDay.Value;
-            if (entityUpdateDto.DeathDay.HasValue) entity.DeathDay = entityUpdateDto.DeathDay;
             if (entityUpdateDto.Gender.HasValue) entity.Gender = entityUpdateDto.Gender.Value;
             if (entityUpdateDto.FamilyId.HasValue && entityUpdateDto.FamilyId.Value != Guid.Empty)
                 entity.FamilyId = entityUpdateDto.FamilyId.Value;
-            // Father/Mother/Spouse are nullable — null clears the link, a Guid sets it.
-            entity.FatherId = entityUpdateDto.FatherId == Guid.Empty ? null : entityUpdateDto.FatherId ?? entity.FatherId;
-            entity.MotherId = entityUpdateDto.MotherId == Guid.Empty ? null : entityUpdateDto.MotherId ?? entity.MotherId;
-            entity.SpouseId = entityUpdateDto.SpouseId == Guid.Empty ? null : entityUpdateDto.SpouseId ?? entity.SpouseId;
 
             if (entityUpdateDto.Image != null)
             {
