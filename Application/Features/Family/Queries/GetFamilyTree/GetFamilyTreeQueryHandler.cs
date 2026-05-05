@@ -15,7 +15,7 @@ namespace Application.Features.Family.Queries.GetFamilyTree
     /// Builds a forest of family-tree nodes for a given family.
     ///
     /// A node is a "family hub" — a primary member plus their spouses, with
-    /// children grouped per-spouse. Spouses are detected three ways so the tree
+    /// children grouped per-spouse. Spouses are detected four ways so the tree
     /// stays connected even when data is partial:
     ///   1. <c>primary.SpouseId</c> (forward)
     ///   2. another member with <c>SpouseId == primary.Id</c> (reverse — handles
@@ -23,6 +23,12 @@ namespace Application.Features.Family.Queries.GetFamilyTree
     ///      disconnected hubs)
     ///   3. implicit via shared child (the "other parent" of any of primary's
     ///      children who is in the same family)
+    ///   4. inferred "kelin" pairing — when a member has no relations of any
+    ///      kind (no parent / no spouse / no child in family) and there is
+    ///      exactly one opposite-gender "frontier" member (has parents in family
+    ///      but no spouse and no kids), pair them. Common pattern: user adds a
+    ///      daughter-in-law without explicit links and expects her to land next
+    ///      to the obvious husband candidate instead of as a disconnected root.
     /// </summary>
     public class GetFamilyTreeQueryHandler(
         IMemberRepository memberRepository,
@@ -129,6 +135,46 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 list.Add(m.Id);
             }
 
+            // ─────────────────────────────────────────────────────────────────
+            // Inferred "kelin" pairings — bridges the common UX gap where a
+            // user adds a daughter-in-law without setting any explicit links
+            // (no parents, no spouseId, no children) and expects her to land
+            // next to the obvious husband instead of in a disconnected corner.
+            //
+            // Rule: a "stray" (no parent / no explicit spouse / no children in
+            // family) is paired with the unique opposite-gender "frontier"
+            // member (has parents in family but no explicit spouse and no
+            // children). If multiple candidates exist on either side, we skip
+            // the pairing — guessing among siblings is too risky.
+            // ─────────────────────────────────────────────────────────────────
+            bool HasExplicitSpouse(MemberEntity m) =>
+                m.SpouseId.HasValue || spouseReverse.ContainsKey(m.Id);
+
+            bool HasChildrenInFamily(MemberEntity m) =>
+                childrenByParent.ContainsKey(m.Id);
+
+            bool HasParentInFamily(MemberEntity m) =>
+                InFamily(m.FatherId) || InFamily(m.MotherId);
+
+            var strays = members
+                .Where(m => !HasParentInFamily(m) && !HasExplicitSpouse(m) && !HasChildrenInFamily(m))
+                .ToList();
+
+            var frontier = members
+                .Where(m => HasParentInFamily(m) && !HasExplicitSpouse(m) && !HasChildrenInFamily(m))
+                .ToList();
+
+            var inferredSpouse = new Dictionary<Guid, Guid>();
+            foreach (var s in strays)
+            {
+                var candidates = frontier.Where(f => f.Gender != s.Gender).ToList();
+                if (candidates.Count != 1) continue;
+                var partner = candidates[0];
+                inferredSpouse[s.Id] = partner.Id;
+                inferredSpouse[partner.Id] = s.Id;
+                frontier.Remove(partner);
+            }
+
             HashSet<Guid> SpousesOf(MemberEntity primary)
             {
                 var ids = new HashSet<Guid>();
@@ -143,6 +189,9 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                     var otherId = OtherParentOf(c, primary.Id);
                     if (otherId.HasValue && InFamily(otherId)) ids.Add(otherId.Value);
                 }
+
+                if (inferredSpouse.TryGetValue(primary.Id, out var inferredId))
+                    ids.Add(inferredId);
 
                 ids.Remove(primary.Id);
                 return ids;

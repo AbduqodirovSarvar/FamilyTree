@@ -173,6 +173,89 @@ public class GetFamilyTreeQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_StrayDaughterInLaw_PairedWithUniqueFrontierMale()
+    {
+        // Reproduces the "kelin" UX gap: user adds a wife without filling any
+        // relationship fields. Expected: she lands next to the only obvious
+        // husband candidate (Father — has parents in family, no spouse, no kids)
+        // rather than as a disconnected root.
+        var grandFather = TestData.Member(familyId: _familyId, gender: Gender.MALE, firstName: "Bobo");
+        var grandMother = TestData.Member(familyId: _familyId, gender: Gender.FEMALE, firstName: "Buvi");
+        var father = TestData.Member(
+            familyId: _familyId, gender: Gender.MALE, firstName: "Er",
+            fatherId: grandFather.Id, motherId: grandMother.Id);
+        var wife = TestData.Member(familyId: _familyId, gender: Gender.FEMALE, firstName: "Xotin");
+        Setup([grandFather, grandMother, father, wife]);
+        var sut = CreateSut();
+
+        var response = await sut.Handle(new GetFamilyTreeQuery { FamilyId = _familyId }, default);
+
+        // One unified tree — wife must NOT be a separate root.
+        response.Data!.Roots.Should().HaveCount(1);
+        var root = response.Data.Roots[0];
+        root.Primary.Id.Should().Be(grandFather.Id);
+
+        // Drill down: grandFather → grandMother spouse → father → wife spouse.
+        var fatherNode = root.Spouses
+            .SelectMany(s => s.Children)
+            .Single(n => n.Primary.Id == father.Id);
+        fatherNode.Spouses.Should().HaveCount(1);
+        fatherNode.Spouses[0].Spouse.Id.Should().Be(wife.Id);
+    }
+
+    [Fact]
+    public async Task Handle_StrayKuyov_PairedWithUniqueFrontierFemale()
+    {
+        // Symmetric counterpart of the "kelin" case: a daughter (in family) and
+        // her husband ("kuyov", from another family). User adds the kuyov without
+        // any explicit links — the inference should still kick in and place him
+        // next to the unique frontier female candidate.
+        var grandFather = TestData.Member(familyId: _familyId, gender: Gender.MALE, firstName: "Bobo");
+        var grandMother = TestData.Member(familyId: _familyId, gender: Gender.FEMALE, firstName: "Buvi");
+        var daughter = TestData.Member(
+            familyId: _familyId, gender: Gender.FEMALE, firstName: "Qiz",
+            fatherId: grandFather.Id, motherId: grandMother.Id);
+        var sonInLaw = TestData.Member(familyId: _familyId, gender: Gender.MALE, firstName: "Kuyov");
+        Setup([grandFather, grandMother, daughter, sonInLaw]);
+        var sut = CreateSut();
+
+        var response = await sut.Handle(new GetFamilyTreeQuery { FamilyId = _familyId }, default);
+
+        // One unified tree — sonInLaw is not a separate root.
+        response.Data!.Roots.Should().HaveCount(1);
+        var root = response.Data.Roots[0];
+
+        var daughterNode = root.Spouses
+            .SelectMany(s => s.Children)
+            .Single(n => n.Primary.Id == daughter.Id);
+        daughterNode.Spouses.Should().HaveCount(1);
+        daughterNode.Spouses[0].Spouse.Id.Should().Be(sonInLaw.Id);
+    }
+
+    [Fact]
+    public async Task Handle_StrayWithMultipleFrontierCandidates_NotInferred()
+    {
+        // Safety check: when there's more than one frontier candidate of the
+        // right gender (e.g. two unmarried sons), inference is skipped — picking
+        // one would be a guess and could attach the wife to the wrong brother.
+        var grandFather = TestData.Member(familyId: _familyId, gender: Gender.MALE);
+        var grandMother = TestData.Member(familyId: _familyId, gender: Gender.FEMALE);
+        var son1 = TestData.Member(familyId: _familyId, gender: Gender.MALE,
+            fatherId: grandFather.Id, motherId: grandMother.Id);
+        var son2 = TestData.Member(familyId: _familyId, gender: Gender.MALE,
+            fatherId: grandFather.Id, motherId: grandMother.Id);
+        var wife = TestData.Member(familyId: _familyId, gender: Gender.FEMALE);
+        Setup([grandFather, grandMother, son1, son2, wife]);
+        var sut = CreateSut();
+
+        var response = await sut.Handle(new GetFamilyTreeQuery { FamilyId = _familyId }, default);
+
+        // wife stays a separate root because we won't guess between son1 / son2.
+        response.Data!.Roots.Should().HaveCount(2);
+        response.Data.Roots.Select(r => r.Primary.Id).Should().Contain(wife.Id);
+    }
+
+    [Fact]
     public async Task Handle_OrphanedChildOfOutsideFather_FallsBackAsRoot()
     {
         // Father not in this family's loaded set → child becomes a root via the
