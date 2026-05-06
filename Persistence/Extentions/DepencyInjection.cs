@@ -26,6 +26,12 @@ namespace Persistence.Extentions
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IFamilyRepository, FamilyRepository>();
+            services.AddScoped<IFamilyViewRepository, FamilyViewRepository>();
+            // Singleton — holds the in-memory dedup buffer that
+            // FamilyViewFlushService drains every few minutes. Must outlive
+            // every request scope so refresh storms within a single page-load
+            // collapse into one row.
+            services.AddSingleton<IFamilyViewRecorder, FamilyViewRecorder>();
             services.AddScoped<IMemberRepository, MemberRepository>();
             services.AddScoped<IUploadedFileRepository, UploadedFileRepository>();
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();

@@ -19,6 +19,7 @@ namespace Persistence.Data
         public virtual DbSet<UserRole> UserRoles { get; set; }
         public virtual DbSet<UserRolePermission> UserRolePermissions { get; set; }
         public virtual DbSet<Family> Families { get; set; }
+        public virtual DbSet<FamilyView> FamilyViews { get; set; }
         public virtual DbSet<Member> Members { get; set; }
         public virtual DbSet<UploadedFile> UploadedFiles { get; set; }
         

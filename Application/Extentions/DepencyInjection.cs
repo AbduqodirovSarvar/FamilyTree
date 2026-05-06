@@ -40,6 +40,7 @@ namespace Application.Extentions
             // Use IServiceScopeFactory inside to access scoped services.
             services.AddHostedService<DailyStatisticsService>();
             services.AddHostedService<DailyDatabaseBackupService>();
+            services.AddHostedService<FamilyViewFlushService>();
         }
     }
 }
