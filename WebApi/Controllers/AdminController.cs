@@ -31,6 +31,20 @@ namespace WebApi.Controllers
         private readonly ILogger<AdminController> _logger = logger;
 
         /// <summary>
+        /// Lets the SPA decide whether to render admin-only UI (settings
+        /// tab, send-now buttons) without sending requests that the gate
+        /// would just 403. Returns 200 in either case so a non-admin
+        /// doesn't see a noisy network error in the console — the
+        /// boolean is the actual signal.
+        /// </summary>
+        [HttpGet("check")]
+        public async Task<IActionResult> CheckAdminStatus(CancellationToken cancellationToken)
+        {
+            var isAdmin = await _adminGate.IsCurrentUserAdminAsync(cancellationToken);
+            return Ok(new { isAdmin });
+        }
+
+        /// <summary>
         /// Generates the same statistics summary the daily background
         /// service sends and posts it to <c>familytree.dev.stats</c>
         /// immediately. Returns 202 so the dashboard can show
