@@ -26,12 +26,26 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
 # postgresql-client provides pg_dump for the daily backup BackgroundService.
-# The version doesn't have to match the server's exactly — pg_dump 16 can
-# dump a 16/17 server, and Debian's stock package on the aspnet:9.0 image
-# (Debian Bookworm) ships pg_dump 15+ which is fine for our schema.
-# Cleaning the apt cache afterward keeps the image small.
+# Debian Bookworm's stock package only ships pg_dump 15, which refuses to
+# dump from a Postgres 16+ server ("server version mismatch"). We install
+# from the official PGDG apt repository so the client version matches the
+# server (currently PG 16). Bumping the server later means bumping the
+# `postgresql-client-16` line below — no other changes needed.
+#
+# The signed-by approach (apt-key is deprecated) installs the PGDG signing
+# key into a dedicated keyring file, then references it from the sources
+# list — current best practice on Debian Bookworm.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends postgresql-client && \
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
+    install -d /usr/share/postgresql-common/pgdg && \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc && \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release; echo $VERSION_CODENAME)-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends postgresql-client-16 && \
+    apt-get purge -y curl gnupg && \
+    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Listen on plain HTTP inside the container; TLS should terminate at a reverse proxy.
