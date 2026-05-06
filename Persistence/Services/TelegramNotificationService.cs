@@ -37,7 +37,11 @@ namespace Persistence.Services
             _logger = logger;
         }
 
-        public async Task SendAsync(string destination, string text, CancellationToken cancellationToken = default)
+        public async Task SendAsync(
+            string destination,
+            string text,
+            string? parseMode = null,
+            CancellationToken cancellationToken = default)
         {
             // Empty config = "gateway not wired up in this environment". Don't
             // log noisy warnings on every call — a single startup-time check
@@ -48,9 +52,16 @@ namespace Persistence.Services
 
             try
             {
+                // Build the body without the parseMode field when null —
+                // mirrors what the gateway does internally and keeps wire
+                // payloads small.
+                object payload = string.IsNullOrEmpty(parseMode)
+                    ? new { destination, text }
+                    : new { destination, text, parseMode };
+
                 var response = await _http.PostAsJsonAsync(
                     "/api/notify",
-                    new { destination, text },
+                    payload,
                     cancellationToken);
 
                 if (!response.IsSuccessStatusCode)

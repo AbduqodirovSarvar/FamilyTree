@@ -13,6 +13,12 @@ namespace Application.Common.Interfaces.Repositories.Common
         Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Pushes a <c>SELECT COUNT(*)</c> down to the database — avoids
+        /// loading the rows just to count them. Used by the daily-stats
+        /// background service and any future cardinality probes.
+        /// </summary>
+        Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
         Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
         Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);

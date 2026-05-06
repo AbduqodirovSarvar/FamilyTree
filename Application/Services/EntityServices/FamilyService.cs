@@ -1,3 +1,4 @@
+using Application.Common.Helpers;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
@@ -81,10 +82,37 @@ namespace Application.Services.EntityServices
             // turn a successful family-create into a user-facing error.
             await _notifications.SendAsync(
                 "familytree.dev.families",
-                $"Yangi oila: {result.Name} {result.FamilyName} (egasi: {user.FirstName} {user.LastName})",
+                FormatNewFamilyMessage(result, user),
+                parseMode: "HTML",
                 cancellationToken);
 
             return _mapper.Map<FamilyViewModel>(result);
+        }
+
+        /// <summary>
+        /// HTML-formatted message body for the families topic. Both the
+        /// family fields and the creator's profile are escaped via
+        /// <see cref="TelegramHtml.Escape"/> — usernames or family names
+        /// containing <c>&lt;</c> or <c>&amp;</c> would otherwise break
+        /// Telegram's parser.
+        /// </summary>
+        private static string FormatNewFamilyMessage(Family family, User creator)
+        {
+            var creatorName = $"{TelegramHtml.Escape(creator.FirstName)} {TelegramHtml.Escape(creator.LastName)}".Trim();
+            var when = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
+
+            return $"""
+                🏡 <b>Yangi oila yaratildi</b>
+
+                📛 <b>Nom:</b> {TelegramHtml.Escape(family.Name)}
+                👨‍👩‍👧‍👦 <b>Familiya:</b> {TelegramHtml.Escape(family.FamilyName)}
+                📝 <b>Tavsif:</b> {TelegramHtml.Escape(family.Description)}
+
+                👤 <b>Yaratuvchi:</b> {creatorName}
+                🆔 <b>Username:</b> @{TelegramHtml.Escape(creator.UserName)}
+                📧 <b>Email:</b> <code>{TelegramHtml.Escape(creator.Email)}</code>
+                🕒 <b>Sana:</b> {when} UTC
+                """;
         }
 
         /// <summary>

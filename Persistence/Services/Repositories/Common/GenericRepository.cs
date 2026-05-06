@@ -66,6 +66,17 @@ namespace Persistence.Services.Repositories.Common
             return await _dbSet.AnyAsync(predicate, cancellationToken);
         }
 
+        public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+        {
+            // No Redis short-circuit here on purpose: counts move on every
+            // INSERT/DELETE; a stale cached value would mislead the daily
+            // stats more than the COUNT(*) query costs.
+            IQueryable<TEntity> query = _dbSet;
+            if (predicate != null)
+                query = query.Where(predicate);
+            return await query.CountAsync(cancellationToken);
+        }
+
         public virtual async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var result = await _redisService.GetAsync<TEntity>(id.ToString());

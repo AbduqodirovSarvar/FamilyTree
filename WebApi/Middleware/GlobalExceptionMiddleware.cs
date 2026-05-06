@@ -48,7 +48,8 @@ namespace WebApi.Middleware
                 await notifications.SendAsync(
                     "familytree.dev.bugs",
                     FormatBugMessage(context, ex),
-                    context.RequestAborted);
+                    parseMode: null,
+                    cancellationToken: context.RequestAborted);
 
                 if (!context.Response.HasStarted)
                 {

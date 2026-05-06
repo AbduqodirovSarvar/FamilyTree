@@ -3,6 +3,7 @@ using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.EntityServices.Auths;
 using Application.Common.Interfaces.EntityServices.Common;
 using Application.Common.Mappings;
+using Application.Services.BackgroundServices;
 using Application.Services.EntityServices;
 using Application.Services.EntityServices.Auths;
 using Application.Services.EntityServices.Common;
@@ -32,6 +33,10 @@ namespace Application.Extentions
             {
                 cfg.AddMaps(typeof(AssemblyMarker).Assembly);
             });
+
+            // Background workers — singletons by design (long-lived loops).
+            // Use IServiceScopeFactory inside to access scoped services.
+            services.AddHostedService<DailyStatisticsService>();
         }
     }
 }

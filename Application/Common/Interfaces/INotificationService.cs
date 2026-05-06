@@ -17,6 +17,16 @@ namespace Application.Common.Interfaces
         /// Logical name configured server-side, e.g. <c>familytree.dev.users</c>.
         /// The gateway resolves it to a chat/topic — clients never see raw IDs.
         /// </param>
-        Task SendAsync(string destination, string text, CancellationToken cancellationToken = default);
+        /// <param name="parseMode">
+        /// Optional Telegram formatting mode: <c>HTML</c>, <c>Markdown</c>,
+        /// or <c>MarkdownV2</c>. Null = plain text. HTML is the safest
+        /// choice for rich formatting because only three characters
+        /// (<c>&amp;</c>, <c>&lt;</c>, <c>&gt;</c>) need escaping in text.
+        /// </param>
+        Task SendAsync(
+            string destination,
+            string text,
+            string? parseMode = null,
+            CancellationToken cancellationToken = default);
     }
 }
