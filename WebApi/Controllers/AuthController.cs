@@ -1,5 +1,6 @@
 ﻿using Application.Features.Auth.Commands.ChangePassword;
 using Application.Features.Auth.Commands.Confirmation;
+using Application.Features.Auth.Commands.LeaveFamily;
 using Application.Features.Auth.Commands.RefreshToken;
 using Application.Features.Auth.Commands.Reset;
 using Application.Features.Auth.Commands.SignIn;
@@ -132,6 +133,16 @@ namespace WebApi.Controllers
             if (command == null)
                 return BadRequest("Request cannot be null");
             var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        // Self-service detach from the user's current family. Owners are
+        // refused at the handler — they have to delete the family instead.
+        [Authorize]
+        [HttpPost("leave-family")]
+        public async Task<IActionResult> LeaveFamily(CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new LeaveFamilyCommand(), cancellationToken);
             return Ok(result);
         }
     }

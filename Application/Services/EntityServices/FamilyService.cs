@@ -24,10 +24,13 @@ namespace Application.Services.EntityServices
     /// Family-scoped read/write rules:
     ///
     /// <list type="bullet">
-    ///   <item><description><b>List (read)</b> — admin sees every family; non-admins see only the
-    ///   ones they created (filtered by <c>OwnerId == currentUser.Id</c>).</description></item>
+    ///   <item><description><b>List (read)</b> — admin sees every family; non-admins see families
+    ///   they created (<c>OwnerId == currentUser.Id</c>) <i>or</i> the one they're attached to
+    ///   (<c>Family.Id == currentUser.FamilyId</c>). Membership is admin/owner-granted, so it's
+    ///   trusted as a visibility signal.</description></item>
     ///   <item><description><b>Update / Delete</b> — owner-only, <i>regardless of role</i>.
-    ///   Even an admin cannot edit or delete a family someone else created.</description></item>
+    ///   Even an admin cannot edit or delete a family someone else created. Attached members
+    ///   can manage tree members but never the family record itself.</description></item>
     /// </list>
     ///
     /// Admin status is decided by the role's <c>DesignedName == "ADMIN"</c> rather than by
@@ -75,9 +78,10 @@ namespace Application.Services.EntityServices
         }
 
         /// <summary>
-        /// Augments the base list query with an ownership predicate when the
-        /// current user isn't an admin. Admin still sees everything (e.g. for
-        /// system-wide moderation in the preview module).
+        /// Augments the base list query with a visibility predicate when the
+        /// current user isn't an admin: families they own OR the family they're
+        /// attached to. Admin still sees everything (e.g. for system-wide
+        /// moderation in the preview module).
         /// </summary>
         public override async Task<Response<List<FamilyViewModel>>> GetAllAsync(
             Expression<Func<Family, bool>>? predicate = null,
@@ -89,8 +93,14 @@ namespace Application.Services.EntityServices
             if (user != null && !await IsAdminAsync(user, cancellationToken))
             {
                 var userId = user.Id;
-                Expression<Func<Family, bool>> ownPredicate = f => f.OwnerId == userId;
-                predicate = ownPredicate.AndAlso(predicate);
+                // Empty Guid is the "no attached family" sentinel — picked over
+                // a nullable so the EF translator emits a single SQL OR instead
+                // of branching on HasValue at expression-build time.
+                var attachedFamilyId = user.FamilyId ?? Guid.Empty;
+                Expression<Func<Family, bool>> visibilityPredicate = f =>
+                    f.OwnerId == userId
+                    || (attachedFamilyId != Guid.Empty && f.Id == attachedFamilyId);
+                predicate = visibilityPredicate.AndAlso(predicate);
             }
 
             return await base.GetAllAsync(predicate, pageIndex, pageSize, cancellationToken);

@@ -24,11 +24,13 @@ namespace Application.Services.EntityServices
     /// Member access rules — modeled to match Family:
     ///
     /// <list type="bullet">
-    ///   <item><description><b>List (read)</b> — admin sees every member; others see only members
-    ///   of families they own (filtered via <c>m.Family.OwnerId == currentUserId</c>).</description></item>
-    ///   <item><description><b>Create / Update / Delete</b> — the target family must be owned by the
-    ///   current user, regardless of role. An admin can read any member but can't add or
-    ///   modify members in someone else's family tree.</description></item>
+    ///   <item><description><b>List (read)</b> — admin sees every member; others see members of
+    ///   families they own <i>or</i> the family they're attached to (<c>User.FamilyId</c>).
+    ///   Membership is admin/owner-granted, so attached users get the same read scope as the
+    ///   owner.</description></item>
+    ///   <item><description><b>Create / Update / Delete</b> — the target family must be owned by
+    ///   the current user <i>or</i> the user must be attached to it. Admin can read any member
+    ///   but can't write into a family they neither own nor belong to.</description></item>
     /// </list>
     /// </summary>
     internal class MemberService(
@@ -55,8 +57,8 @@ namespace Application.Services.EntityServices
                 throw new UnauthorizedAccessException("You do not have permission to create this entity.");
 
             // The DTO carries FamilyId — the user is asking us to attach the new
-            // member to that family. They must own it (admin too).
-            await EnsureOwnsFamilyAsync(entityCreateDto.FamilyId, cancellationToken);
+            // member to that family. They must own it OR be attached to it.
+            await EnsureCanManageFamilyAsync(entityCreateDto.FamilyId, cancellationToken);
 
             var entity = _mapper.Map<Member>(entityCreateDto);
 
@@ -75,9 +77,10 @@ namespace Application.Services.EntityServices
         }
 
         /// <summary>
-        /// Adds a "members of my families only" predicate to the list query when
-        /// the caller isn't an admin. Admins keep the unrestricted view used by
-        /// the preview moderation flow.
+        /// Adds a visibility predicate to the list query when the caller isn't
+        /// an admin: members of families they own OR members of the family
+        /// they're attached to. Admins keep the unrestricted view used by the
+        /// preview moderation flow.
         /// </summary>
         public override async Task<Response<List<MemberViewModel>>> GetAllAsync(
             Expression<Func<Member, bool>>? predicate = null,
@@ -89,8 +92,12 @@ namespace Application.Services.EntityServices
             if (user != null && !await IsAdminAsync(user, cancellationToken))
             {
                 var userId = user.Id;
-                Expression<Func<Member, bool>> ownPredicate = m => m.Family != null && m.Family.OwnerId == userId;
-                predicate = ownPredicate.AndAlso(predicate);
+                var attachedFamilyId = user.FamilyId ?? Guid.Empty;
+                Expression<Func<Member, bool>> visibilityPredicate = m =>
+                    m.Family != null
+                    && (m.Family.OwnerId == userId
+                        || (attachedFamilyId != Guid.Empty && m.FamilyId == attachedFamilyId));
+                predicate = visibilityPredicate.AndAlso(predicate);
             }
 
             return await base.GetAllAsync(predicate, pageIndex, pageSize, cancellationToken);
@@ -105,16 +112,17 @@ namespace Application.Services.EntityServices
             var entity = await _repository.GetByIdAsync(entityUpdateDto.Id, cancellationToken)
                             ?? throw new KeyNotFoundException("Member not found");
 
-            // The member's CURRENT family must be owned by the caller — this
-            // catches "edit this member in another user's tree" attempts. The
-            // DTO might also try to MOVE the member into a different family;
-            // if so, that target family must be owned too.
-            await EnsureOwnsFamilyAsync(entity.FamilyId, cancellationToken);
+            // The member's CURRENT family must be one the caller can manage
+            // (owner or attached) — this catches "edit this member in another
+            // user's tree" attempts. The DTO might also try to MOVE the member
+            // into a different family; if so, that target family must be
+            // manageable too.
+            await EnsureCanManageFamilyAsync(entity.FamilyId, cancellationToken);
             if (entityUpdateDto.FamilyId.HasValue
                 && entityUpdateDto.FamilyId.Value != Guid.Empty
                 && entityUpdateDto.FamilyId.Value != entity.FamilyId)
             {
-                await EnsureOwnsFamilyAsync(entityUpdateDto.FamilyId.Value, cancellationToken);
+                await EnsureCanManageFamilyAsync(entityUpdateDto.FamilyId.Value, cancellationToken);
             }
 
             // PUT semantic for nullable fields — the DTO value IS the new value.
@@ -165,7 +173,7 @@ namespace Application.Services.EntityServices
             var entity = await _repository.GetByIdAsync(id, cancellationToken)
                                 ?? throw new KeyNotFoundException("Entity not found");
 
-            await EnsureOwnsFamilyAsync(entity.FamilyId, cancellationToken);
+            await EnsureCanManageFamilyAsync(entity.FamilyId, cancellationToken);
 
             // Detach self-references from any other member that points at this one
             // (FatherId / MotherId / SpouseId) so PostgreSQL doesn't reject the delete
@@ -196,11 +204,12 @@ namespace Application.Services.EntityServices
         // ─── Private helpers ───────────────────────────────────────
 
         /// <summary>
-        /// Throws if the current user isn't the owner of the given family.
-        /// Used by Create/Update/Delete to keep member writes scoped to the
-        /// caller's tree — matches the Family-side ownership rule.
+        /// Throws if the current user can't manage members of the given family —
+        /// allowed if they own it OR are attached to it via <c>User.FamilyId</c>.
+        /// Membership is admin/owner-granted upstream, so attached users are
+        /// trusted to write within their own family tree.
         /// </summary>
-        private async Task EnsureOwnsFamilyAsync(Guid familyId, CancellationToken cancellationToken)
+        private async Task EnsureCanManageFamilyAsync(Guid familyId, CancellationToken cancellationToken)
         {
             var user = await _userService.GetCurrentUser(cancellationToken)
                        ?? throw new UnauthorizedAccessException("Not authenticated.");
@@ -208,8 +217,10 @@ namespace Application.Services.EntityServices
             var family = await _familyRepository.GetByIdAsync(familyId, cancellationToken)
                          ?? throw new KeyNotFoundException("Family not found.");
 
-            if (family.OwnerId != user.Id)
-                throw new UnauthorizedAccessException("Faqat o'zingiz yaratgan oilaning a'zolarini boshqarishingiz mumkin.");
+            var isOwner = family.OwnerId == user.Id;
+            var isAttached = user.FamilyId.HasValue && user.FamilyId.Value == family.Id;
+            if (!isOwner && !isAttached)
+                throw new UnauthorizedAccessException("Siz bu oilaga biriktirilmagansiz va uning egasi emassiz.");
         }
 
         private async Task<bool> IsAdminAsync(User user, CancellationToken cancellationToken)
