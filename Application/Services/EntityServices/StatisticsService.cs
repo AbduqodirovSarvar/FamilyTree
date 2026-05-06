@@ -34,21 +34,18 @@ namespace Application.Services.EntityServices
 
         public async Task GenerateAndSendAsync(CancellationToken cancellationToken = default)
         {
-            // Run independent counts in parallel — they hit different tables
-            // and the Postgres pool can serve them simultaneously. Saves a
-            // round-trip's worth of latency per extra metric.
-            var userTask = _users.CountAsync(cancellationToken: cancellationToken);
-            var confirmedUserTask = _users.CountAsync(u => u.EmailConfirmed, cancellationToken);
-            var familyTask = _families.CountAsync(cancellationToken: cancellationToken);
-            var memberTask = _members.CountAsync(cancellationToken: cancellationToken);
+            // Sequential awaits, NOT Task.WhenAll. All four repositories share
+            // the same scoped DbContext, and EF Core's DbContext is not
+            // thread-safe — running counts in parallel triggered "A second
+            // operation was started on this context instance before a previous
+            // operation completed." The 3-extra-round-trips of latency cost is
+            // negligible for a once-a-day stats dump.
+            var totalUsers = await _users.CountAsync(cancellationToken: cancellationToken);
+            var confirmedUsers = await _users.CountAsync(u => u.EmailConfirmed, cancellationToken);
+            var totalFamilies = await _families.CountAsync(cancellationToken: cancellationToken);
+            var totalMembers = await _members.CountAsync(cancellationToken: cancellationToken);
 
-            await Task.WhenAll(userTask, confirmedUserTask, familyTask, memberTask);
-
-            var text = FormatStatistics(
-                totalUsers: userTask.Result,
-                confirmedUsers: confirmedUserTask.Result,
-                totalFamilies: familyTask.Result,
-                totalMembers: memberTask.Result);
+            var text = FormatStatistics(totalUsers, confirmedUsers, totalFamilies, totalMembers);
 
             await _notifications.SendAsync(
                 "familytree.dev.stats",
@@ -58,7 +55,7 @@ namespace Application.Services.EntityServices
 
             _logger.LogInformation(
                 "Statistics dispatched: {Users} users ({Confirmed} confirmed), {Families} families, {Members} members.",
-                userTask.Result, confirmedUserTask.Result, familyTask.Result, memberTask.Result);
+                totalUsers, confirmedUsers, totalFamilies, totalMembers);
         }
 
         private static string FormatStatistics(
