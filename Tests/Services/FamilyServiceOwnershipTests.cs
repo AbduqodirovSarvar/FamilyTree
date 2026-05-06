@@ -29,6 +29,7 @@ public class FamilyServiceOwnershipTests
     private readonly Mock<IUserService> _userService = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IMapper> _mapper = new();
+    private readonly Mock<INotificationService> _notifications = new();
 
     private object CreateSut()
     {
@@ -44,7 +45,8 @@ public class FamilyServiceOwnershipTests
             _permissions.Object,
             _userService.Object,
             _mediator.Object,
-            _mapper.Object
+            _mapper.Object,
+            _notifications.Object
         });
     }
 

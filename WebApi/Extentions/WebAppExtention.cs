@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data;
 using Persistence.Data.DefaultData.Services;
+using WebApi.Middleware;
 
 namespace WebApi.Extentions
 {
@@ -9,6 +10,13 @@ namespace WebApi.Extentions
     {
         public static async Task AddWebAppExtention(this WebApplication app)
         {
+            // Global exception → Telegram bridge runs FIRST so it can catch
+            // failures from any later middleware (auth, controllers, etc.).
+            // Any exception that bubbles past UseStaticFiles / UseRouting /
+            // UseAuthorization lands here and gets dispatched to the bugs
+            // topic before the JSON error envelope is returned.
+            app.UseMiddleware<GlobalExceptionMiddleware>();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

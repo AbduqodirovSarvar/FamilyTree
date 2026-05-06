@@ -27,6 +27,7 @@ public class AuthHandlersTests
     private readonly Mock<IHashService> _hash = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IMapper> _mapper = new();
+    private readonly Mock<INotificationService> _notifications = new();
 
     // ─── SignIn ──────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ public class AuthHandlersTests
     public async Task SignUp_DelegatesToService_AndWrapsInResponse()
     {
         _auth.Setup(a => a.SignUpAsync(It.IsAny<SignUpCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        var sut = new SignUpCommandHandler(_auth.Object);
+        var sut = new SignUpCommandHandler(_auth.Object, _notifications.Object);
 
         var response = await sut.Handle(new SignUpCommand { Password = "p", ConfirmPassword = "p" }, default);
 

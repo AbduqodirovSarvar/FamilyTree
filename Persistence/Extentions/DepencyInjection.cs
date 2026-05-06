@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Persistence.Data;
 using Persistence.Data.Interceptors;
@@ -58,6 +59,25 @@ namespace Persistence.Extentions
             });
 
             services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfiguration"));
+
+            // Notification gateway — typed HttpClient.
+            // Lives in Persistence (not Application) because the HTTP transport
+            // is an infrastructure concern; Application code depends only on
+            // the INotificationService abstraction.
+            services.Configure<NotificationGatewayConfiguration>(
+                configuration.GetSection(NotificationGatewayConfiguration.SectionName));
+            services.AddHttpClient<INotificationService, TelegramNotificationService>((sp, client) =>
+            {
+                var opts = sp.GetRequiredService<IOptions<NotificationGatewayConfiguration>>().Value;
+                if (!string.IsNullOrEmpty(opts.BaseUrl))
+                    client.BaseAddress = new Uri(opts.BaseUrl);
+                if (!string.IsNullOrEmpty(opts.ApiKey))
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {opts.ApiKey}");
+                // Tight timeout — notification calls run inside business
+                // request threads; long hangs would bubble up as slow
+                // sign-up/family-create even though the call is async.
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
 
             var secretWord = configuration["JWTConfiguration:Secret"] ?? "JWTConfiguration:Secret";
 

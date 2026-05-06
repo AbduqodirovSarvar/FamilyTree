@@ -20,6 +20,13 @@ services:
       JWTConfiguration__ValidAudience: ${JWT_AUDIENCE:-https://family-tree.uz}
       # Email confirmation linki shu URL'dan boshlanadi: {App__FrontendBaseUrl}/confirm-email?token=...
       App__FrontendBaseUrl: ${APP_FRONTEND_BASE_URL:-https://admin.ft.svlab.uz}
+
+      # Notification gateway — bir xil server ichidagi development-tg-bot
+      # konteyneriga DNS orqali ulanadi. Kalit `.env`'dan keladi va
+      # development-tg-bot tarafidagi API_KEY_FAMILYTREE bilan bir xil
+      # bo'lishi shart, aks holda 401 qaytadi.
+      NotificationGateway__BaseUrl: ${NOTIFICATION_GATEWAY_BASE_URL:-http://development-tg-bot:8080}
+      NotificationGateway__ApiKey: ${NOTIFICATION_GATEWAY_API_KEY:?NOTIFICATION_GATEWAY_API_KEY kerak}
     ports:
       - "${WEBAPI_PORT:-5009}:8080"
     volumes:

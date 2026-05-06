@@ -42,7 +42,8 @@ namespace Application.Services.EntityServices
         IPermissionService permissionService,
         IUserService userService,
         IMediator mediator,
-        IMapper mapper)
+        IMapper mapper,
+        INotificationService notifications)
         : GenericEntityService<Family, CreateFamilyDto, UpdateFamilyDto, FamilyViewModel>(familyRepository, permissionService, mapper), IFamilyService
     {
         private const string AdminRoleDesignedName = "ADMIN";
@@ -50,6 +51,7 @@ namespace Application.Services.EntityServices
         private readonly IUserService _userService = userService;
         private readonly IUserRoleRepository _userRoleRepository = userRoleRepository;
         private readonly IMediator _mediator = mediator;
+        private readonly INotificationService _notifications = notifications;
 
         public override async Task<FamilyViewModel> CreateAsync(CreateFamilyDto entityCreateDto, CancellationToken cancellationToken = default)
         {
@@ -73,6 +75,14 @@ namespace Application.Services.EntityServices
 
             var result = await _repository.CreateAsync(entity, cancellationToken)
                                 ?? throw new InvalidOperationException("Failed to create entity.");
+
+            // Fire-and-forget Telegram notification. Failures are swallowed
+            // by TelegramNotificationService so a gateway outage doesn't
+            // turn a successful family-create into a user-facing error.
+            await _notifications.SendAsync(
+                "familytree.dev.families",
+                $"Yangi oila: {result.Name} {result.FamilyName} (egasi: {user.FirstName} {user.LastName})",
+                cancellationToken);
 
             return _mapper.Map<FamilyViewModel>(result);
         }
