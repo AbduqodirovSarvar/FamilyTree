@@ -29,6 +29,8 @@ namespace Application.Extentions
             services.AddScoped<IUserRolePermissionService, UserRolePermissionService>();
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IStatisticsService, StatisticsService>();
+            services.AddScoped<IAdminAuthorizationService, AdminAuthorizationService>();
             services.AddAutoMapper(cfg =>
             {
                 cfg.AddMaps(typeof(AssemblyMarker).Assembly);
@@ -37,6 +39,7 @@ namespace Application.Extentions
             // Background workers — singletons by design (long-lived loops).
             // Use IServiceScopeFactory inside to access scoped services.
             services.AddHostedService<DailyStatisticsService>();
+            services.AddHostedService<DailyDatabaseBackupService>();
         }
     }
 }

@@ -25,6 +25,15 @@ RUN dotnet publish "WebApi.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
+# postgresql-client provides pg_dump for the daily backup BackgroundService.
+# The version doesn't have to match the server's exactly — pg_dump 16 can
+# dump a 16/17 server, and Debian's stock package on the aspnet:9.0 image
+# (Debian Bookworm) ships pg_dump 15+ which is fine for our schema.
+# Cleaning the apt cache afterward keeps the image small.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
 # Listen on plain HTTP inside the container; TLS should terminate at a reverse proxy.
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_HTTP_PORTS=8080 \

@@ -1,5 +1,4 @@
 using Application.Common.Interfaces;
-using Application.Common.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,19 +6,15 @@ using Microsoft.Extensions.Logging;
 namespace Application.Services.BackgroundServices
 {
     /// <summary>
-    /// Wakes once per day, counts the high-level entities, and posts a
-    /// summary to <c>familytree.dev.stats</c>.
+    /// Wakes once per day and asks <see cref="IStatisticsService"/> to
+    /// post the summary. The actual aggregation lives in the service so
+    /// the admin "send now" endpoint can call the exact same code path
+    /// without duplicating the format or the count queries.
     ///
     /// <para><b>Schedule.</b> Picks the next 09:00 UTC after each post and
     /// sleeps until then. UTC chosen on purpose — the dev group spans
     /// timezones, so an absolute time is more predictable than "every
     /// 24h after boot" (which would drift with each restart).</para>
-    ///
-    /// <para><b>Scoping.</b> Repositories are scoped (per-request lifetime),
-    /// so the loop opens a fresh DI scope each iteration via
-    /// <see cref="IServiceScopeFactory"/>. Holding a scope across the
-    /// 24-hour <see cref="Task.Delay"/> would pin the DbContext and
-    /// every transient EF resource for the whole day.</para>
     /// </summary>
     public sealed class DailyStatisticsService : BackgroundService
     {
@@ -57,74 +52,21 @@ namespace Application.Services.BackgroundServices
 
                 try
                 {
-                    await SendDailyStatsAsync(stoppingToken);
+                    // Open a fresh DI scope per tick — repositories are
+                    // scoped, and holding a scope across the 24h delay
+                    // would pin the DbContext for the whole day.
+                    using var scope = _scopeFactory.CreateScope();
+                    var stats = scope.ServiceProvider.GetRequiredService<IStatisticsService>();
+                    await stats.GenerateAndSendAsync(stoppingToken);
                 }
                 catch (Exception ex)
                 {
                     // Catch-and-log so a transient repository or gateway
                     // hiccup doesn't kill the whole service. Without this,
-                    // one 500 from the gateway could silence stats forever.
+                    // one failure would silence stats forever.
                     _logger.LogError(ex, "Daily statistics dispatch failed; will retry tomorrow.");
                 }
             }
-        }
-
-        private async Task SendDailyStatsAsync(CancellationToken cancellationToken)
-        {
-            using var scope = _scopeFactory.CreateScope();
-            var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            var families = scope.ServiceProvider.GetRequiredService<IFamilyRepository>();
-            var members = scope.ServiceProvider.GetRequiredService<IMemberRepository>();
-            var notifications = scope.ServiceProvider.GetRequiredService<INotificationService>();
-
-            // Run counts in parallel — they hit independent tables and the
-            // Postgres connection pool can handle it. Saves ~latency * 3
-            // when network is slow.
-            var userTask = users.CountAsync(cancellationToken: cancellationToken);
-            var confirmedUserTask = users.CountAsync(u => u.EmailConfirmed, cancellationToken);
-            var familyTask = families.CountAsync(cancellationToken: cancellationToken);
-            var memberTask = members.CountAsync(cancellationToken: cancellationToken);
-
-            await Task.WhenAll(userTask, confirmedUserTask, familyTask, memberTask);
-
-            var text = FormatStatistics(
-                totalUsers: userTask.Result,
-                confirmedUsers: confirmedUserTask.Result,
-                totalFamilies: familyTask.Result,
-                totalMembers: memberTask.Result);
-
-            await notifications.SendAsync(
-                "familytree.dev.stats",
-                text,
-                parseMode: "HTML",
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Daily statistics sent: {Users} users, {Families} families, {Members} members.",
-                userTask.Result, familyTask.Result, memberTask.Result);
-        }
-
-        private static string FormatStatistics(
-            int totalUsers,
-            int confirmedUsers,
-            int totalFamilies,
-            int totalMembers)
-        {
-            // Counts come from the DB (no user-supplied content) so escaping
-            // isn't strictly required — using TelegramHtml here only as a
-            // belt-and-suspenders default in case fields change later.
-            var when = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
-
-            return $"""
-                📊 <b>Kunlik statistika</b>
-                <i>{when} UTC</i>
-
-                👥 <b>Foydalanuvchilar:</b> <code>{totalUsers}</code>
-                ✅ <b>Tasdiqlangan email:</b> <code>{confirmedUsers}</code>
-
-                🏡 <b>Oilalar:</b> <code>{totalFamilies}</code>
-                👨‍👩‍👧‍👦 <b>A'zolar:</b> <code>{totalMembers}</code>
-                """;
         }
 
         /// <summary>

@@ -28,5 +28,21 @@ namespace Application.Common.Interfaces
             string text,
             string? parseMode = null,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Streams a file to the gateway's <c>/api/notify/document</c>
+        /// endpoint, which forwards it to Telegram as a document
+        /// (<c>sendDocument</c>). Used for things like daily DB backups.
+        /// Throws on transport or upstream errors so admin-triggered
+        /// "send now" flows can surface the failure to the caller —
+        /// fire-and-forget swallow semantics live on
+        /// <see cref="SendAsync(string, string, string?, CancellationToken)"/>.
+        /// </summary>
+        Task SendDocumentAsync(
+            string destination,
+            Stream content,
+            string fileName,
+            string? caption = null,
+            CancellationToken cancellationToken = default);
     }
 }

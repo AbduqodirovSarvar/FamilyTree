@@ -60,6 +60,13 @@ namespace Persistence.Extentions
 
             services.Configure<JWTConfiguration>(configuration.GetSection("JWTConfiguration"));
 
+            // Database backup — pg_dump runner. Configurable so dev boxes
+            // (Windows) can point at the full pg_dump.exe path while the
+            // Docker image leaves it as the default ($PATH lookup).
+            services.Configure<DatabaseBackupConfiguration>(
+                configuration.GetSection(DatabaseBackupConfiguration.SectionName));
+            services.AddScoped<IDatabaseBackupService, DatabaseBackupService>();
+
             // Notification gateway — typed HttpClient.
             // Lives in Persistence (not Application) because the HTTP transport
             // is an infrastructure concern; Application code depends only on

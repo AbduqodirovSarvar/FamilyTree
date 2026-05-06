@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Persistence.Models;
 using System;
+using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,6 +81,49 @@ namespace Persistence.Services
                 // unreachable. The log keeps the failure visible to operators.
                 _logger.LogError(ex,
                     "Failed to dispatch notification to {Destination}.", destination);
+            }
+        }
+
+        public async Task SendDocumentAsync(
+            string destination,
+            Stream content,
+            string fileName,
+            string? caption = null,
+            CancellationToken cancellationToken = default)
+        {
+            // Document uploads are admin-triggered or scheduled — no point
+            // silently swallowing failures the way fire-and-forget text
+            // notifications do. Surface errors so the caller (admin
+            // endpoint, backup service) can log a useful message.
+            if (string.IsNullOrEmpty(_options.BaseUrl) || string.IsNullOrEmpty(_options.ApiKey))
+                throw new InvalidOperationException(
+                    "Notification gateway is not configured. Set NotificationGateway:BaseUrl and ApiKey.");
+
+            using var form = new MultipartFormDataContent
+            {
+                { new StringContent(destination), "destination" }
+            };
+
+            if (!string.IsNullOrEmpty(caption))
+                form.Add(new StringContent(caption), "caption");
+
+            // StreamContent — never copies the file into memory; the
+            // HttpClient streams chunks directly to the gateway. Caller
+            // owns the underlying stream's lifetime.
+            var fileContent = new StreamContent(content);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            form.Add(fileContent, "file", fileName);
+
+            using var response = await _http.PostAsync("/api/notify/document", form, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError(
+                    "Notification gateway rejected document {FileName} for {Destination}: {StatusCode} {Body}",
+                    fileName, destination, (int)response.StatusCode, body);
+
+                response.EnsureSuccessStatusCode();
             }
         }
     }
