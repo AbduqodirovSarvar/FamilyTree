@@ -114,6 +114,12 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                     AddChild(childrenByParent, m.MotherId!.Value, m);
             }
 
+            // Birinchi farzand chapda tursin: oldest → youngest. DB-dan kelgan
+            // tartib aralash (oldin kichik uka, keyin katta aka) bo'lib chiqadi
+            // va bu tree-da chalkash ko'rinadi.
+            foreach (var list in childrenByParent.Values)
+                list.Sort((a, b) => a.BirthDay.CompareTo(b.BirthDay));
+
             List<MemberEntity> ChildrenOf(Guid id) =>
                 childrenByParent.TryGetValue(id, out var list) ? list : new List<MemberEntity>();
 
