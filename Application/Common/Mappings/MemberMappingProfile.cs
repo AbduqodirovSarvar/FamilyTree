@@ -16,7 +16,18 @@ namespace Application.Common.Mappings
     {
         public MemberMappingProfile()
         {
-            CreateMap<Member, MemberViewModel>().ReverseMap();
+            // Self-referencing navigations (Father/Mother/Spouse/Children) are ignored
+            // because EF Core's relationship fix-up populates them whenever multiple
+            // members of the same family are materialized in one DbContext, and AutoMapper
+            // would then expand the graph recursively — turning a 35-row /Member/list
+            // response into multi-megabyte JSON. Frontend uses *Id scalars to look up
+            // related members within the same list.
+            CreateMap<Member, MemberViewModel>()
+                .ForMember(d => d.Father, opt => opt.Ignore())
+                .ForMember(d => d.Mother, opt => opt.Ignore())
+                .ForMember(d => d.Spouse, opt => opt.Ignore())
+                .ForMember(d => d.Children, opt => opt.Ignore())
+                .ReverseMap();
             CreateMap<CreateMemberDto, Member>()
                 .ForMember(f => f.ImageId, opt => opt.Ignore())
                 .ForMember(x => x.Image, opt => opt.Ignore());
