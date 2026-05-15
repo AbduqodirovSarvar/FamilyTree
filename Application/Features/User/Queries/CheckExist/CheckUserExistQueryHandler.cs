@@ -20,9 +20,13 @@ namespace Application.Features.User.Queries.CheckExist
             if (!hasId && !hasUserName && !hasEmail && !hasPhone)
                 return Response<bool>.Fail("At least one of Id, UserName, Email, or Phone must be provided.");
 
+            // UserName'ni registrga sezgir bo'lmagan holda solishtiramiz —
+            // "Xolmurodov" va "xolmurodov" bir xil foydalanuvchi nomi.
+            var normalizedUserName = hasUserName ? request.UserName!.Trim().ToLower() : null;
+
             Expression<Func<Domain.Entities.User, bool>> predicate = x =>
                 (hasId && x.Id == request.Id!.Value)
-                || (hasUserName && x.UserName == request.UserName)
+                || (normalizedUserName != null && x.UserName!.ToLower() == normalizedUserName)
                 || (hasEmail && x.Email == request.Email)
                 || (hasPhone && x.Phone == request.Phone);
 

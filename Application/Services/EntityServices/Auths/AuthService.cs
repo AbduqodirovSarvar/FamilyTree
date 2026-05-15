@@ -167,6 +167,13 @@ namespace Application.Services.EntityServices.Auths
 
             var user = _mapper.Map<User>(signUpDto);
 
+            // Foydalanuvchi nomi registrdan qat'i nazar yagona bo'lishi kerak —
+            // "Xolmurodov" band bo'lsa, "xolmurodov" bilan ro'yxatdan o'tib bo'lmaydi.
+            var normalizedUserName = user.UserName?.Trim().ToLower();
+            if (!string.IsNullOrEmpty(normalizedUserName)
+                && await _userRepository.AnyAsync(u => u.UserName!.ToLower() == normalizedUserName, cancellationToken))
+                throw new InvalidOperationException("Bu foydalanuvchi nomi allaqachon band. Iltimos, boshqa nom tanlang.");
+
             user.RoleId = userRole.Id;
 
             if (signUpDto.Image != null)

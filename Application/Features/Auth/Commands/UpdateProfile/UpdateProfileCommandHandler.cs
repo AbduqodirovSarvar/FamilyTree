@@ -27,7 +27,16 @@ namespace Application.Features.Auth.Commands.UpdateProfile
 
             if (!string.IsNullOrWhiteSpace(request.FirstName)) user.FirstName = request.FirstName;
             if (!string.IsNullOrWhiteSpace(request.LastName)) user.LastName = request.LastName;
-            if (!string.IsNullOrWhiteSpace(request.UserName)) user.UserName = request.UserName;
+            if (!string.IsNullOrWhiteSpace(request.UserName))
+            {
+                // Registrdan qat'i nazar boshqa foydalanuvchi bilan to'qnashmasligini tekshiramiz.
+                var normalizedUserName = request.UserName.Trim().ToLower();
+                if (await _userRepository.AnyAsync(
+                        u => u.Id != user.Id && u.UserName!.ToLower() == normalizedUserName,
+                        cancellationToken))
+                    throw new InvalidOperationException("Bu foydalanuvchi nomi allaqachon band. Iltimos, boshqa nom tanlang.");
+                user.UserName = request.UserName;
+            }
             if (!string.IsNullOrWhiteSpace(request.Phone)) user.Phone = request.Phone;
             if (!string.IsNullOrWhiteSpace(request.Email)) user.Email = request.Email;
 
