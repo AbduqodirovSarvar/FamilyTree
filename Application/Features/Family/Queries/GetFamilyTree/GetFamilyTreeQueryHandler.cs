@@ -252,26 +252,68 @@ namespace Application.Features.Family.Queries.GetFamilyTree
                 };
             }
 
-            // Hub score: how rich would this member's hub be if we made them the
-            // primary? Weighted by descendant count, then spouse count, then a
-            // MALE-first cultural tiebreaker. This is what picks bobo (3 wives,
+            // Total subtree size (children + grandchildren + ...). Memoized so
+            // repeated lookups during sort stay O(1). Cycle-safe via the
+            // pre-insert of 0 before recursion. Used in HubScore so a true
+            // ancestor (1 child but a deep tree) outranks a daughter-in-law
+            // sitting one generation below (many direct children but no tree
+            // above her).
+            var descendantCache = new Dictionary<Guid, int>();
+            int DescendantCount(Guid memberId)
+            {
+                if (descendantCache.TryGetValue(memberId, out var cached))
+                    return cached;
+                descendantCache[memberId] = 0;
+                int count = 0;
+                foreach (var child in ChildrenOf(memberId))
+                    count += 1 + DescendantCount(child.Id);
+                descendantCache[memberId] = count;
+                return count;
+            }
+
+            // "Married-in" detector. A founder ancestor's spouse is also from
+            // outside (no parents in family). A kelin/kuyov's spouse, by
+            // contrast, has parents in family — that's the blood-line link.
+            // We use this to demote in-laws among root candidates so the
+            // actual head of family surfaces as primary even when the in-law
+            // happens to have more direct children.
+            bool SpouseHasParentInFamily(MemberEntity m)
+            {
+                foreach (var sid in SpousesOf(m))
+                {
+                    if (byId.TryGetValue(sid, out var spouse) && HasParentInFamily(spouse))
+                        return true;
+                }
+                return false;
+            }
+
+            // Hub score: how rich is this member's full subtree if we make
+            // them the primary? Weighted by total descendant count, then
+            // spouse count, then a MALE-first cultural tiebreaker. Total
+            // descendants (vs. direct children) is what picks bobo (3 wives,
             // 2 kids) over each individual wife as the root for a polygamous
-            // family — without it the rendering duplicates the husband across
-            // every wife's hub and orphans children whose mother isn't the
-            // chosen wife.
+            // family — and equally what picks the eldest ancestor over their
+            // daughter-in-law when she has more direct children but a
+            // shallower tree.
             int HubScore(MemberEntity m)
             {
                 int spouseCount = SpousesOf(m).Count;
-                int childCount = ChildrenOf(m.Id).Count;
-                return childCount * 100
+                int subtreeSize = DescendantCount(m.Id);
+                return subtreeSize * 100
                        + spouseCount * 10
                        + (m.Gender == Domain.Enums.Gender.MALE ? 1 : 0);
             }
 
-            // Roots: members with no in-family parent. Within that, prefer the
-            // richest hub so the "head of family" surfaces as primary.
+            // Roots: members with no in-family parent. Within that, prefer
+            // blood ancestors over married-in spouses (whose partner DOES
+            // have parents in family), then the richest hub. Without the
+            // married-in tier, an in-law with many direct children can
+            // outrank the founder ancestor and leave the founder as a
+            // separate root with an empty hub (everyone below is already
+            // claimed by the in-law's sub-tree).
             var sorted = members
                 .OrderBy(m => PrimaryParentId(m).HasValue ? 1 : 0)
+                .ThenBy(m => SpouseHasParentInFamily(m) ? 1 : 0)
                 .ThenByDescending(HubScore)
                 .ToList();
 

@@ -15,7 +15,14 @@ namespace Application.Common.Mappings
     public class FamilyMappingProfile : Profile
     {
         public FamilyMappingProfile() {
-            CreateMap<Family, FamilyViewModel>().ReverseMap();
+            // Members is ignored to prevent the same recursive-graph blowup that hit
+            // MemberMappingProfile: if anyone later adds .Include(f => f.Members) to a
+            // Family query, EF fix-up + AutoMapper would expand each Member's Father/
+            // Mother/Spouse/Children back into the response. Frontend uses /Member/list
+            // to fetch members of a family, not the nested collection here.
+            CreateMap<Family, FamilyViewModel>()
+                .ForMember(d => d.Members, opt => opt.Ignore())
+                .ReverseMap();
             CreateMap<CreateFamilyDto, Family>()
                 .ForMember(f => f.ImageId, opt => opt.Ignore())
                 .ForMember(x => x.Image, opt => opt.Ignore());

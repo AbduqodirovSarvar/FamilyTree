@@ -256,6 +256,40 @@ public class GetFamilyTreeQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_DaughterInLawWithManyChildren_DefersToBloodAncestor()
+    {
+        // Without the married-in demotion + subtree-size scoring, a kelin
+        // with many direct children outranks her father-in-law (who only
+        // has one child but a deep tree below). The founder then renders
+        // as a separate empty hub because all of his descendants got
+        // claimed by the kelin's already-built sub-tree.
+        var bobo = TestData.Member(familyId: _familyId, gender: Gender.MALE, firstName: "Bobo");
+        var buvi = TestData.Member(familyId: _familyId, gender: Gender.FEMALE, firstName: "Buvi");
+        var son = TestData.Member(
+            familyId: _familyId, gender: Gender.MALE, firstName: "O'g'il",
+            fatherId: bobo.Id, motherId: buvi.Id);
+        var kelin = TestData.Member(familyId: _familyId, gender: Gender.FEMALE, firstName: "Kelin");
+        var k1 = TestData.Member(familyId: _familyId, fatherId: son.Id, motherId: kelin.Id);
+        var k2 = TestData.Member(familyId: _familyId, fatherId: son.Id, motherId: kelin.Id);
+        var k3 = TestData.Member(familyId: _familyId, fatherId: son.Id, motherId: kelin.Id);
+        Setup([bobo, buvi, son, kelin, k1, k2, k3]);
+        var sut = CreateSut();
+
+        var response = await sut.Handle(new GetFamilyTreeQuery { FamilyId = _familyId }, default);
+
+        // One unified tree rooted at the blood ancestor.
+        response.Data!.Roots.Should().HaveCount(1);
+        var root = response.Data.Roots[0];
+        root.Primary.Id.Should().Be(bobo.Id);
+
+        // Drill down: bobo → buvi spouse → son → kelin spouse → 3 grandkids.
+        var sonNode = root.Spouses.SelectMany(s => s.Children).Single(n => n.Primary.Id == son.Id);
+        sonNode.Spouses.Should().HaveCount(1);
+        sonNode.Spouses[0].Spouse.Id.Should().Be(kelin.Id);
+        sonNode.Spouses[0].Children.Should().HaveCount(3);
+    }
+
+    [Fact]
     public async Task Handle_OrphanedChildOfOutsideFather_FallsBackAsRoot()
     {
         // Father not in this family's loaded set → child becomes a root via the
