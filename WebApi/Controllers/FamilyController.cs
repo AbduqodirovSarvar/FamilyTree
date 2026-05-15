@@ -61,7 +61,12 @@ namespace WebApi.Controllers
             if (string.IsNullOrWhiteSpace(familyName))
                 return BadRequest(Response<FamilyTreeViewModel>.Fail("familyName is required"));
 
-            var family = await _familyRepository.GetAsync(f => f.FamilyName == familyName, cancellationToken);
+            // Case-insensitive lookup — "Xolmurodov", "xolmurodov" va "XOLMURODOV"
+            // bir xil oilani ochishi kerak. ToLower() EF tomonidan SQL lower()
+            // ga tarjima qilinadi.
+            var normalizedFamilyName = familyName.Trim().ToLower();
+            var family = await _familyRepository.GetAsync(
+                f => f.FamilyName.ToLower() == normalizedFamilyName, cancellationToken);
             if (family == null)
                 return NotFound(Response<FamilyTreeViewModel>.Fail("Family not found"));
 

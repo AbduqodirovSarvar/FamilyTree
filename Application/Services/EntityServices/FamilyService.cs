@@ -60,6 +60,12 @@ namespace Application.Services.EntityServices
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.CREATE, null))
                 throw new UnauthorizedAccessException("You do not have permission to create this entity.");
 
+            // Familiya nomi registrdan qat'i nazar yagona bo'lishi kerak —
+            // "Xolmurodov" mavjud bo'lsa, "xolmurodov" qo'shib bo'lmaydi.
+            var normalizedFamilyName = entityCreateDto.FamilyName.Trim().ToLower();
+            if (await _repository.AnyAsync(f => f.FamilyName.ToLower() == normalizedFamilyName, cancellationToken))
+                throw new InvalidOperationException("Bu familiya nomi allaqachon mavjud. Iltimos, boshqa nom tanlang.");
+
             var entity = _mapper.Map<Family>(entityCreateDto);
 
             var user = await _userService.GetCurrentUser(cancellationToken)
@@ -159,7 +165,16 @@ namespace Application.Services.EntityServices
             // Required fields (Name, FamilyName, OwnerId) keep PATCH guard so a
             // blank submission can't accidentally null out a non-nullable column.
             if (!string.IsNullOrWhiteSpace(entityUpdateDto.Name)) entity.Name = entityUpdateDto.Name;
-            if (!string.IsNullOrWhiteSpace(entityUpdateDto.FamilyName)) entity.FamilyName = entityUpdateDto.FamilyName;
+            if (!string.IsNullOrWhiteSpace(entityUpdateDto.FamilyName))
+            {
+                // Registrdan qat'i nazar boshqa oila bilan to'qnashmasligini tekshiramiz.
+                var normalizedFamilyName = entityUpdateDto.FamilyName.Trim().ToLower();
+                if (await _repository.AnyAsync(
+                        f => f.Id != entity.Id && f.FamilyName.ToLower() == normalizedFamilyName,
+                        cancellationToken))
+                    throw new InvalidOperationException("Bu familiya nomi allaqachon mavjud. Iltimos, boshqa nom tanlang.");
+                entity.FamilyName = entityUpdateDto.FamilyName;
+            }
             entity.Description = string.IsNullOrEmpty(entityUpdateDto.Description) ? null : entityUpdateDto.Description;
             if (entityUpdateDto.OwnerId.HasValue && entityUpdateDto.OwnerId.Value != Guid.Empty)
                 entity.OwnerId = entityUpdateDto.OwnerId.Value;
