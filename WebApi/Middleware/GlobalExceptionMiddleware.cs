@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using System.Net;
 using System.Text.Json;
@@ -68,33 +69,61 @@ namespace WebApi.Middleware
             }
             catch (Exception ex)
             {
-                // Layer 1: unhandled exception that bubbled past the
-                // controllers entirely.
-                _logger.LogError(ex,
-                    "Unhandled exception on {Method} {Path} (trace {TraceId}).",
-                    context.Request.Method, context.Request.Path, context.TraceIdentifier);
+                var statusCode = MapStatusCode(ex);
 
-                await notifications.SendAsync(
-                    BugsDestination,
-                    FormatExceptionMessage(context, ex),
-                    parseMode: null,
-                    cancellationToken: context.RequestAborted);
+                if (statusCode < 500)
+                {
+                    // Expected business failure — bad token, missing record,
+                    // invalid input, access denied. Not a bug: log quietly at
+                    // Warning (no stack trace) and don't page the bugs topic.
+                    // Telegram-spamming these would bury the real 5xx errors.
+                    _logger.LogWarning(
+                        "{StatusCode} on {Method} {Path}: {ExceptionType} — {Message} (trace {TraceId}).",
+                        statusCode, context.Request.Method, context.Request.Path,
+                        ex.GetType().Name, ex.Message, context.TraceIdentifier);
+                }
+                else
+                {
+                    // Layer 1: genuine unhandled exception that bubbled past
+                    // the controllers entirely.
+                    _logger.LogError(ex,
+                        "Unhandled exception on {Method} {Path} (trace {TraceId}).",
+                        context.Request.Method, context.Request.Path, context.TraceIdentifier);
+
+                    await notifications.SendAsync(
+                        BugsDestination,
+                        FormatExceptionMessage(context, ex),
+                        parseMode: null,
+                        cancellationToken: context.RequestAborted);
+                }
 
                 if (!context.Response.HasStarted)
                 {
                     context.Response.ContentType = "application/json";
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    context.Response.StatusCode = statusCode;
 
                     var payload = new
                     {
                         success = false,
-                        message = "Internal server error.",
+                        message = statusCode < 500 ? ex.Message : "Internal server error.",
                         traceId = context.TraceIdentifier
                     };
                     await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
                 }
             }
         }
+
+        // Maps known business exceptions to client-error (4xx) status codes.
+        // Anything not listed is treated as a server bug → 500, which is what
+        // triggers the Error log + Telegram notification above.
+        private static int MapStatusCode(Exception ex) => ex switch
+        {
+            ForbiddenException => (int)HttpStatusCode.Forbidden,             // 403
+            UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized, // 401
+            KeyNotFoundException => (int)HttpStatusCode.NotFound,            // 404
+            ArgumentException => (int)HttpStatusCode.BadRequest,             // 400
+            _ => (int)HttpStatusCode.InternalServerError                     // 500
+        };
 
         private static string FormatExceptionMessage(HttpContext context, Exception ex)
         {

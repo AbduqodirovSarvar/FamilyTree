@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Common.Exceptions;
+using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices.Common;
 using Application.Common.Interfaces.Repositories.Common;
 using Application.Common.Models;
@@ -35,7 +36,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (! await _permissionService.CheckPermission(entityTypeName, OperationType.CREATE, null))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity = _mapper.Map<TEntity>(entityCreateDto);
 
@@ -49,7 +50,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.UPDATE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity = _mapper.Map<TEntity>(entityUpdateDto);
 
@@ -63,7 +64,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.DELETE))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity = await _repository.GetAsync(x => x.Id == id, cancellationToken)
                                 ?? throw new KeyNotFoundException("Entity not found");
@@ -75,7 +76,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.GET))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity = await _repository.GetAsync(predicate, cancellationToken);
             return entity != null;
@@ -85,7 +86,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.GET))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var (data, totalCount) = await _repository.GetPaginatedAsync(predicate, pageIndex, pageSize, null, cancellationToken);
 
@@ -96,7 +97,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.GET))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity = await _repository.GetByIdAsync(id, cancellationToken)
                                 ?? throw new KeyNotFoundException("Entity not found");
@@ -108,7 +109,7 @@ namespace Application.Services.EntityServices.Common
         {
             string entityTypeName = typeof(TEntity).Name;
             if (!await _permissionService.CheckPermission(entityTypeName, OperationType.GET))
-                throw new UnauthorizedAccessException("You do not have permission to create this entity.");
+                throw new ForbiddenException("You do not have permission for this action.");
 
             var entity =  await _repository.GetAsync(predicate, cancellationToken)
                                 ?? throw new KeyNotFoundException("Entity not found");

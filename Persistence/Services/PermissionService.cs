@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Common.Exceptions;
+using Application.Common.Interfaces;
 using Application.Common.Interfaces.EntityServices;
 using Application.Common.Interfaces.Repositories;
 using Domain.Entities;
@@ -20,7 +21,7 @@ namespace Persistence.Services
         public async Task<bool> CheckPermission(string entityName, OperationType operation, User? user = null)
         {
             user ??= await _currentUserService.GetCurrentUserAsync()
-                        ?? throw new UnauthorizedAccessException("You don't have access for this action!");
+                        ?? throw new ForbiddenException("You don't have access for this action!");
 
             var permission = GetPermission(entityName, operation);
 
