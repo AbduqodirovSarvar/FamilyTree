@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Interfaces.Repositories;
 using Domain.Entities;
@@ -26,7 +27,7 @@ public class PermissionServiceTests
 
         var act = () => sut.CheckPermission("Family", OperationType.GET);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<ForbiddenException>();
     }
 
     [Fact]
